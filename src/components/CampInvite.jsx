@@ -6,14 +6,15 @@ import { useSocial, Avatar } from "./Social";
 import { inviteToCampaign } from "@/lib/social";
 
 // Invitar a la campaña: lista de amigos con un botón por persona (la invitación les llega como aviso y se unen con uno de sus personajes).
-export default function CampInvite({ camp, players, onClose }) {
+export default function CampInvite({ camp, players, onClose, onInvited }) {
   const s = useSocial();
   const [state, setState] = useState({}); // id -> "ok" | mensaje de error
   const friends = s.friends || [];
   const send = async (p) => {
     setState((o) => ({ ...o, [p.id]: "…" }));
-    const msg = await inviteToCampaign(p, { campId: camp.id, name: camp.name || "Campaña", desc: camp.description || "", gm: s.me?.username || "", players, custom: !!camp.customContent }).catch(() => "No se pudo enviar.");
+    const msg = await inviteToCampaign(p, { campId: camp.id, name: camp.name || "Campaña", desc: camp.description || "", gm: s.me?.username || "", players, custom: !!camp.customContent, ...(camp.party ? { party: true, color: camp.color } : {}) }).catch(() => "No se pudo enviar.");
     setState((o) => ({ ...o, [p.id]: /enviada/i.test(msg) ? "ok" : msg }));
+    if (/enviada/i.test(msg) && onInvited) onInvited(p);
   };
   return (
     <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Invitar jugadores" onClick={onClose}>

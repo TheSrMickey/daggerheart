@@ -643,7 +643,7 @@ export async function inviteGroupToCampaign(id: string, camp: CampInvite, note: 
 }
 
 // ---------- invitaciones a campaña ----------
-export type CampInvite = { campId: string; name: string; desc?: string; gm: string; players: number; custom?: boolean };
+export type CampInvite = { campId: string; name: string; desc?: string; gm: string; players: number; custom?: boolean; party?: boolean; color?: string };
 export async function inviteToCampaign(to: Person, camp: CampInvite): Promise<string> {
   const me = await myself();
   if (!me) return "Inicia sesión para invitar.";
@@ -651,6 +651,64 @@ export async function inviteToCampaign(to: Person, camp: CampInvite): Promise<st
   if (why) return why;
   await notify(to.id, "campaign_invite", me.id, camp);
   return `Invitación enviada a ${to.username}.`;
+}
+
+// ---------- modo party: sala de espera de una campaña ----------
+// Cada jugador escribe solo su propia fila (lbm:campaña:usuario) y el anfitrión la ficha común (lb:campaña), así no se pisan al guardar.
+export type LobbyRole = "gm" | "player";
+export type LobbyState = "invited" | "choosing" | "creating" | "selected" | "ready";
+export type LobbyMember = { uid: string; name: string; state: LobbyState; charId?: string; charName?: string; cls?: string; lvl?: number; at: number };
+export type LobbyMeta = { campId: string; name: string; desc?: string; color?: string; custom?: boolean; hostId: string; hostName: string; members: { id: string; name: string; at: number }[]; roles: Record<string, LobbyRole>; started?: boolean; startedAt?: number };
+export type Lobby = { meta: LobbyMeta | null; members: Record<string, LobbyMember> };
+
+export async function createLobby(m: Omit<LobbyMeta, "hostId" | "hostName" | "members" | "roles">): Promise<LobbyMeta | null> {
+  const me = await myself();
+  if (!me) return null;
+  const meta: LobbyMeta = { ...m, hostId: me.id, hostName: me.username, members: [{ id: me.id, name: me.username, at: Date.now() }], roles: { [me.id]: "gm" } };
+  await kvPut(`lb:${m.campId}`, meta);
+  await kvPut(`lbm:${m.campId}:${me.id}`, { uid: me.id, name: me.username, state: "choosing", at: Date.now() } satisfies LobbyMember);
+  return meta;
+}
+export async function loadLobby(campId: string): Promise<Lobby> {
+  const meta = await kvGet<LobbyMeta>(`lb:${campId}`);
+  const rows = await kvList<LobbyMember>(`lbm:${campId}:`);
+  const members: Record<string, LobbyMember> = {};
+  for (const r of rows) members[r.value.uid] = r.value;
+  // Vista previa: las personas de ejemplo invitadas «juegan» solas para poder ver los estados.
+  if (isDev() && meta) {
+    for (const mm of meta.members) {
+      if (!mm.id.startsWith("dev-") || mm.id === "dev-me") continue;
+      const t = Date.now() - mm.at;
+      const state: LobbyState = t < 3000 ? "invited" : t < 8000 ? "choosing" : t < 13000 ? "creating" : t < 17000 ? "selected" : "ready";
+      const fake = { "dev-ana": ["Sylvara", "Druida", 3], "dev-carla": ["Torin", "Guerrero", 2], "dev-dario": ["Mirel", "Bardo", 4] } as Record<string, [string, string, number]>;
+      const f = fake[mm.id] || ["Aventurero", "Pícaro", 1];
+      members[mm.id] = { uid: mm.id, name: mm.name, state, at: mm.at, ...(state === "selected" || state === "ready" ? { charId: "dev-c", charName: f[0], cls: f[1], lvl: f[2] } : {}) };
+    }
+  }
+  return { meta, members };
+}
+export async function updateLobbyMeta(campId: string, fn: (m: LobbyMeta) => LobbyMeta) {
+  const cur = await kvGet<LobbyMeta>(`lb:${campId}`);
+  if (cur) await kvPut(`lb:${campId}`, fn(cur));
+}
+export async function setMyLobby(campId: string, patch: Partial<LobbyMember>) {
+  const me = await myself();
+  if (!me) return;
+  const key = `lbm:${campId}:${me.id}`;
+  const cur = (await kvGet<LobbyMember>(key)) || { uid: me.id, name: me.username, state: "choosing" as LobbyState, at: Date.now() };
+  await kvPut(key, { ...cur, ...patch, uid: me.id, name: me.username, at: Date.now() });
+}
+export async function lobbyInvited(campId: string, p: Person) {
+  await updateLobbyMeta(campId, (m) => (m.members.some((x) => x.id === p.id) ? m : { ...m, members: [...m.members, { id: p.id, name: p.username, at: Date.now() }], roles: { ...m.roles, [p.id]: "player" } }));
+}
+export async function lobbyRemove(campId: string, uid: string) {
+  await updateLobbyMeta(campId, (m) => ({ ...m, members: m.members.filter((x) => x.id !== uid), roles: Object.fromEntries(Object.entries(m.roles).filter(([k]) => k !== uid)) }));
+}
+export async function lobbySetGm(campId: string, uid: string) {
+  await updateLobbyMeta(campId, (m) => ({ ...m, roles: Object.fromEntries(m.members.map((x) => [x.id, x.id === uid ? "gm" : "player"])) as Record<string, LobbyRole> }));
+}
+export async function lobbyStart(campId: string) {
+  await updateLobbyMeta(campId, (m) => ({ ...m, started: true, startedAt: Date.now() }));
 }
 
 // ---------- anuncios «Buscar mesa» ----------
@@ -810,6 +868,7 @@ export const bridge: {
   chars: { id: string; name: string; cls: string; lvl: number }[];
   camps: { id: string; name: string; desc: string; players: number }[];
   join: ((camp: CampInvite, charId: string) => void) | null;
+  joinLobby: ((camp: CampInvite) => void) | null;
   getChar: ((id: string) => Record<string, string> | null) | null;
   campName: string;
-} = { chars: [], camps: [], join: null, getChar: null, campName: "" };
+} = { chars: [], camps: [], join: null, joinLobby: null, getChar: null, campName: "" };

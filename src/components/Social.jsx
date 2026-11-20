@@ -76,6 +76,14 @@ export function JoinCard({ camp, onDone }) {
   const [id, setId] = useState(bridge.chars[0]?.id || "");
   const [msg, setMsg] = useState("");
   const free = bridge.chars;
+  // Modo party: se entra en la sala de espera y el personaje se elige allí.
+  if (camp.party)
+    return (
+      <div className="mh-join">
+        <small style={{ flexBasis: "100%", color: "var(--mh-muted)" }}>Es una campaña en modo party: elegirás o crearás tu personaje en la sala de espera.</small>
+        <button type="button" className="is-ok" onClick={() => (bridge.joinLobby && bridge.joinLobby(camp), setMsg("Entrando…"), onDone && onDone())}>{msg || "Entrar a la sala"}</button>
+      </div>
+    );
   if (!free.length) return <small style={{ color: "var(--mh-muted)" }}>Crea un personaje para poder unirte.</small>;
   const blocked = !camp.custom && free.find((c) => c.id === id)?.custom > 0;
   return (
