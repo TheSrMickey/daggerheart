@@ -723,14 +723,15 @@ export async function lobbyStart(campId: string) {
 
 // ---------- modo aventura (Brumaria) ----------
 // Un viajero por cuenta: copia ligera del personaje elegido, aparte de la hoja tradicional. Fila compartida adv:<usuario>.
-export type Traveller = { uid: string; username: string; name: string; cls: string; anc: string; lvl: number; gold: number; items: string[]; at: number; loc?: string; seen?: number; found?: string[]; decided?: Record<string, string>; rep?: Record<string, number>; diary?: { text: string; at: number }[] };
+export type Traveller = { uid: string; username: string; name: string; cls: string; anc: string; lvl: number; gold: number; items: string[]; at: number; loc?: string; seen?: number; found?: string[]; decided?: Record<string, string>; rep?: Record<string, number>; diary?: { text: string; at: number }[]; tr?: Record<string, number>; act?: AdvAct | null; cd?: Record<string, number>; offers?: { at: number; ids: string[] } | null; done?: string[] };
+export type AdvAct = { id: string; kind: "acc" | "enc"; name: string; tr: string; df: number; start: number; end: number };
 export async function loadTraveller(): Promise<Traveller | null> {
   const me = await myself();
   if (!me) return null;
   const v = await kvGet<Traveller>(`adv:${me.id}`);
   return v && v.name ? v : null;
 }
-export async function enterBrumaria(c: { name: string; cls: string; anc: string; lvl: number }): Promise<Traveller | null> {
+export async function enterBrumaria(c: { name: string; cls: string; anc: string; lvl: number; tr?: Record<string, number> }): Promise<Traveller | null> {
   const me = await myself();
   if (!me) return null;
   if (await loadTraveller()) return null; // uno por cuenta
@@ -770,6 +771,43 @@ export async function decide(key: string, opt: string, fx: Effect): Promise<{ t:
     rep: fx.rep ? { ...(cur.rep || {}), [fx.rep[0]]: ((cur.rep || {})[fx.rep[0]] || 0) + fx.rep[1] } : cur.rep,
     decided: { ...(cur.decided || {}), [key]: opt },
     diary: [{ text: fx.diary, at: Date.now() }, ...(cur.diary || [])].slice(0, 50),
+    seen: Date.now(),
+  };
+  await kvPut(`adv:${me.id}`, t);
+  await kvPut("advc:city", next);
+  return { t, city: next };
+}
+// Acciones con tiempo y encargos: una a la vez por viajero, se resuelven con una tirada al terminar.
+async function patchMe(fn: (t: Traveller) => Traveller): Promise<Traveller | null> {
+  const me = await myself();
+  const cur = await loadTraveller();
+  if (!me || !cur) return null;
+  const t = fn(cur);
+  await kvPut(`adv:${me.id}`, t);
+  return t;
+}
+export const syncTraveller = (tr: Record<string, number>, lvl: number) => patchMe((t) => ({ ...t, tr, lvl }));
+export const startAct = (act: AdvAct) => patchMe((t) => (t.act ? t : { ...t, act, seen: Date.now() }));
+export const abandonAct = () => patchMe((t) => ({ ...t, act: null }));
+export const takeOffers = (ids: string[]) => patchMe((t) => ({ ...t, offers: { at: Date.now(), ids } }));
+export async function resolveAct(fx: Effect & { actId: string; enc?: boolean; resetDone?: boolean }): Promise<{ t: Traveller; city: City } | null> {
+  const me = await myself();
+  const cur = await loadTraveller();
+  if (!me || !cur || !cur.act) return null;
+  const city = await loadCity();
+  const pulse = { ...city.pulse };
+  for (const [k, n] of Object.entries(fx.pulse || {})) pulse[k] = Math.max(0, Math.min(100, (pulse[k] ?? 50) + n));
+  const next: City = { pulse, log: [{ uid: me.id, username: me.username, text: fx.log, at: Date.now() }, ...city.log].slice(0, 20) };
+  const t: Traveller = {
+    ...cur,
+    gold: Math.max(0, cur.gold + (fx.gold || 0)),
+    items: fx.item ? [...cur.items, fx.item] : cur.items,
+    rep: fx.rep ? { ...(cur.rep || {}), [fx.rep[0]]: ((cur.rep || {})[fx.rep[0]] || 0) + fx.rep[1] } : cur.rep,
+    diary: [{ text: fx.diary, at: Date.now() }, ...(cur.diary || [])].slice(0, 50),
+    act: null,
+    cd: fx.enc ? cur.cd : { ...(cur.cd || {}), [fx.actId]: Date.now() },
+    done: fx.enc ? [...(fx.resetDone ? [] : cur.done || []), fx.actId] : cur.done,
+    offers: fx.enc ? null : cur.offers,
     seen: Date.now(),
   };
   await kvPut(`adv:${me.id}`, t);

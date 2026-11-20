@@ -6143,6 +6143,7 @@ const sharedStyles = `
   /* Campaña · pestañas que no son «Directo»: marco de la plataforma (márgenes de la columna central, columna social a la derecha) sin desplazar la página. */
   .mh-cg-body { display: contents; }
   .mh-main-flat > .mh-view-in { height: 100%; }
+  .mh-main-adv { overflow-y: hidden !important; } .mh-main-adv > .mh-view-in { height: 100%; }
   .mh-cg.is-flat { height: 100%; min-height: 0; display: flex; flex-direction: column; }
   .mh-cg.is-flat .mh-cg-body { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 2px 4px 2px 2px; margin: 0 -4px 0 -2px; }
   .mh-cg.is-flat .mh-cg-body > * { flex-shrink: 0; }
@@ -32648,7 +32649,7 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar && !(modernCamp && !isMobile) ? (view === "perfil" || view === "inicio" || view === "ficha" || view === "cartas" || view === "sobres" || view === "aventura" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : modernCamp ? "18px 24px 12px 14px" : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 12px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (view === "aventura" ? " mh-main-adv" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar && !(modernCamp && !isMobile) ? (view === "perfil" || view === "inicio" || view === "ficha" || view === "cartas" || view === "sobres" || view === "aventura" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : modernCamp ? "18px 24px 12px 14px" : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 12px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -36114,7 +36115,7 @@ export default function App({ onSignOut }) {
           {view === "perfil" && profileTarget && <ProfilePage key={profileTarget.id} id={profileTarget.id} name={profileTarget.name} />}
 
           {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} cardBorder={cardBorder} onCardBorder={equipCardBorder} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
-          {view === "aventura" && <AventuraPage chars={Object.entries(characters).map(([id, c]) => ({ id, name: c.f_name || "Sin nombre", cls: c.f_class || "", anc: c.f_ancestry || "", lvl: Number(c.f_level || 1) }))} classColor={classColor} onCreate={openNewCharModal} />}
+          {view === "aventura" && <AventuraPage chars={Object.entries(characters).map(([id, c]) => ({ id, name: c.f_name || "Sin nombre", cls: c.f_class || "", anc: c.f_ancestry || "", lvl: Number(c.f_level || 1), tr: { Agilidad: Number(c.t_agility || 0), Fuerza: Number(c.t_strength || 0), Destreza: Number(c.t_finesse || 0), Instinto: Number(c.t_instinct || 0), Presencia: Number(c.t_presence || 0), Conocimiento: Number(c.t_knowledge || 0) } }))} classColor={classColor} onCreate={openNewCharModal} />}
           {view === "sobres" && <SobresPage items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} back={cardBack} />}
           {view === "taller" && <WorkshopPage FitTitle={FitTitle} FitBox={FitBox} TokDice={TokDice} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} classColors={CLASS_COLORS} classes={CLASSES.map((c) => c.key)} />}
           {view === "cartas" && <CardsPage classDomains={CLASS_DOMAINS} openId={cardsOpenId} onOpened={() => setCardsOpenId(null)} DomainIcon={DomainIcon} items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
