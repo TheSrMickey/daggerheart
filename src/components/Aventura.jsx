@@ -1,8 +1,9 @@
 "use client";
 // Modo aventura · Fase 1: bienvenida a Brumaria y elección o creación del personaje de aventura (ficha ligera, separada de la hoja tradicional).
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dices, Image as ImageIcon, Backpack, BookOpen, MessageCircle, Send, Reply, Trash2, Trophy, Feather, Flame, HandCoins, Check, Clock, Coins, Eye, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
 import { Avatar } from "./Social";
+import PuppetCrowd from "./PuppetCrowd";
 import { rollDuality, effectOf, drawEncargos, ACTIONS, ENCARGOS, DIFF } from "@/lib/aventuraData";
 import { loadZoneImg, saveZoneImg, syncTraveller, startAct, abandonAct, takeOffers, resolveAct, loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound, loadCity, decide, loadChat, postChat, loadNotes, postNote, replyNote, deleteNote } from "@/lib/social";
 
@@ -365,6 +366,9 @@ function PulsePanel({ city }) {
 }
 
 // ---- Escenario a pantalla completa ----
+// Color de cada raza para su monigote 3D (si la raza no está en la lista, sale un color estable a partir de su nombre).
+const ANC_COLOR = { "Autómata": "#9AA7B5", Dracona: "#D9643A", Enano: "#B5834A", Elfo: "#5FBF8A", Hada: "#E58FD0", Fauno: "#A98B5A", Firbolg: "#7FA05A", Fungril: "#B07AA8", Galapa: "#4FA39A", Gigante: "#8A93C9", Goblin: "#8DBB3F", Mediano: "#E3B04B", Humano: "#5E93C9", Infernal: "#D4474B", Katari: "#E0A33A", Orco: "#6F9B4F", Ribbet: "#3FC47F", Simiah: "#B87B52", Gnomo: "#D98ACF", Aetheris: "#7FD6E8" };
+const ancColor = (anc) => ANC_COLOR[anc] || "hsl(" + ([...String(anc || "")].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7)) + ", 65%, 58%)";
 const FR_KEY = ["amanecer", "tarde", "noche"];
 const EXTS = ["webp", "jpg", "png"];
 const SPEED = typeof window !== "undefined" && window.location.pathname.startsWith("/dev-preview") && new URLSearchParams(window.location.search).get("fast") ? 120 : 1; // solo en la vista previa de desarrollo
@@ -547,9 +551,12 @@ function Brumaria({ me, crowd, city, onDecided, onMe }) {
   const [res, setRes] = useState(null);
   const [toast, setToast] = useState("");
   const [walking, setWalking] = useState(false);
+  const [gl3, setGl3] = useState(false); // los monigotes 3D solo salen si el navegador tiene WebGL
+  useEffect(() => { try { const cv = document.createElement("canvas"); setGl3(!!(cv.getContext("webgl2") || cv.getContext("webgl"))); } catch { setGl3(false); } }, []);
   const [trav, setTrav] = useState("");
   useEffect(() => { const t = setInterval(() => { setFr(franjaNow()); setNow(Date.now()); }, 1000); return () => clearInterval(t); }, []);
   const at = me.loc || "faro";
+  const people = useMemo(() => [me, ...crowd.filter((t) => t.uid !== me.uid && (t.loc || "faro") === at)].map((t) => ({ id: t.uid, color: ancColor(t.anc), name: t.name })), [me.uid, me.name, me.anc, at, crowd]); // eslint-disable-line react-hooks/exhaustive-deps
   const d = DISTRICTS.find((x) => x.id === at);
   const pois = POIS[at] || [];
   const acts = ACTIONS.filter((a) => a.z === at);
@@ -590,6 +597,7 @@ function Brumaria({ me, crowd, city, onDecided, onMe }) {
   return (
     <div className="fs" style={{ "--dc": d.c }}>
       <ZoneBg id={at} fr={fr} /><div className="fs-sh" /><Ambient id={at} fr={fr} />
+      {gl3 && <div className="fs-pp3"><PuppetCrowd people={people} meId={me.uid} /></div>}
       <div className="fs-top">
         <span className="fs-g"><FIcon size={14} /> {FName} · {spainClock(now)}</span>
         <span className="fs-g"><MapPin size={14} /> <b>{d.name}</b></span>
@@ -899,6 +907,10 @@ html[data-mh-theme="light"] .fs-pn .adv-tabs button { color: #3d3550; border-col
 html[data-mh-theme="light"] .fs-poi button.is-on, html[data-mh-theme="light"] .fs-menu button.is-on { background: color-mix(in srgb, var(--dc) 38%, #fffbf0); border-color: var(--dc); color: #1f1a2e; }
 html[data-mh-theme="light"] .fs-run { background: color-mix(in srgb, var(--dc) 20%, #fffbf0); } html[data-mh-theme="light"] .fs-bar { background: rgba(43,36,56,.15); }
 html[data-mh-theme="light"] .fs-g.is-m i { color: color-mix(in srgb, var(--pc) 55%, #1f1a2e); }
+.fs-pp3 { position: absolute; left: calc(clamp(280px, 34%, 360px) + 26px); right: 12px; bottom: 98px; height: 250px; pointer-events: none; }
+.pp-labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; } .pp-lab { position: absolute; left: 0; top: 0; white-space: nowrap; padding: 2px 9px; border-radius: 99px; background: rgba(14,12,36,.72); color: #f1edf8; font: 700 11px var(--font-body), 'Inter', system-ui, sans-serif; will-change: transform; } .pp-lab.is-me { background: #E3B04B; color: #1a1408; }
+html[data-mh-theme="light"] .pp-lab:not(.is-me) { background: rgba(255,251,240,.88); color: #2b2438; }
+@media (max-width: 720px) { .fs-pp3 { display: none; } }
 @media (max-width: 900px) { .adv-g { overflow-y: auto; } }
 @media (max-width: 720px) { .fs-pn { width: auto; right: 14px; top: auto; height: 46%; bottom: 92px; } .fs-enc { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .adv-g { grid-template-columns: 1fr; } .adv-sheet { position: static; } .adv-hi { padding: 22px 20px; } .adv-hero { min-height: 300px; } }
