@@ -12,7 +12,6 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
       try {
         const THREE = await import("three");
         const C = await import("cannon-es");
-        const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
         const el = host.current;
         if (dead || !el) return;
         const W = Math.max(40, el.clientWidth), H = Math.max(40, el.clientHeight);
@@ -25,7 +24,20 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         el.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
         const pmrem = new THREE.PMREMGenerator(renderer);
-        const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+        // Entorno de cielo azul con ventanales luminosos: da los reflejos de cristal brillante del estilo Frutiger Aero (como en AEROSET).
+        const envScene = new THREE.Scene();
+        envScene.add(new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), new THREE.ShaderMaterial({
+          side: THREE.BackSide,
+          vertexShader: "varying vec3 p; void main(){ p = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+          fragmentShader: "varying vec3 p; void main(){ float h = p.y; vec3 top = vec3(.08,.34,.82); vec3 mid = vec3(.52,.80,1.0); vec3 low = vec3(.93,.97,1.0); vec3 c = h > 0. ? mix(mid, top, pow(h, .6)) : mix(mid, low, pow(-h, .5)); gl_FragColor = vec4(c, 1.0); }",
+        })));
+        [[-14, 9, 16, 9, 6], [16, 7, 8, 7, 5], [0, 22, 0, 16, 12], [-18, 5, -8, 6, 9]].forEach(([x, y, z, w, h], i) => {
+          const win = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(7, 7, 7.5), side: THREE.DoubleSide }));
+          win.position.set(x, y, z);
+          win.lookAt(0, 1, 0);
+          envScene.add(win);
+        });
+        const envTex = pmrem.fromScene(envScene, 0.02).texture;
         scene.environment = envTex;
         const cam = new THREE.PerspectiveCamera(30, W / H, 0.1, 60);
         cam.position.set(0, 2.3, 9.2);
@@ -56,9 +68,9 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
           return new THREE.LatheGeometry(pts.reverse(), 48);
         };
         const G = 0.15; // misma separación entre el torso y cada pieza
-        const TH = 0.96, TR0 = 0.17, TR1 = 0.35; // torso en pera: fino arriba, ancho abajo
+        const TH = 1.0, TR0 = 0.21, TR1 = 0.33; // torso en alubia: algo más fino arriba que abajo
         const trAt = (y) => TR0 + (TR1 - TR0) * Math.pow(Math.min(1, Math.max(0, (TH / 2 - y) / TH)), 0.95);
-        const HR = 0.27, AL = 0.66, LL = 0.7, AR0 = 0.055, AR1 = 0.135, LR0 = 0.07, LR1 = 0.155;
+        const HR = 0.31, AL = 0.64, LL = 0.68, AR0 = 0.085, AR1 = 0.14, LR0 = 0.095, LR1 = 0.16; // extremidades gruesas, como fideos
         const sy = 0.41; // los brazos salen de la parte alta del torso, junto a los hombros
         const defs = {
           torso: { geo: lathe(TH, TR0, TR1, 0.3, 0.3, 0.9), scz: 0.8, shape: new C.Box(new C.Vec3(0.26, 0.45, 0.2)), mass: 3, k: 1, a: [0, 0, 0], pv: [0, 0, 0], tor: [0, 0, 0], rest: [0, 0, 0] },
@@ -80,10 +92,17 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         for (const [n, d] of Object.entries(defs)) {
           // acabado de pompa: translúcido, brillante y con reflejos iridiscentes
           const mat = new THREE.MeshPhysicalMaterial({
-            color: base.clone().multiplyScalar(d.k), transparent: true, opacity: 0.6, roughness: 0.07, metalness: 0,
-            clearcoat: 1, clearcoatRoughness: 0.05, iridescence: 1, iridescenceIOR: 1.35, iridescenceThicknessRange: [160, 520],
-            envMapIntensity: 1.5, side: THREE.DoubleSide, depthWrite: false,
+            color: base.clone().multiplyScalar(d.k), emissive: base.clone().multiplyScalar(0.2), transparent: true, opacity: 0.82, roughness: 0.04, metalness: 0,
+            clearcoat: 1, clearcoatRoughness: 0.03, ior: 1.45, specularIntensity: 1,
+            envMapIntensity: 1.7, side: THREE.DoubleSide, depthWrite: false,
           });
+          // borde más intenso y centro más translúcido, como la jalea de cristal de AEROSET
+          mat.onBeforeCompile = (sh) => {
+            sh.fragmentShader = sh.fragmentShader.replace("#include <dithering_fragment>", `#include <dithering_fragment>
+              float fr = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 1.4);
+              gl_FragColor.a = mix(0.58, 0.97, fr);
+              gl_FragColor.rgb *= mix(1.04, 0.78, fr);`);
+          };
           const mesh = new THREE.Mesh(d.geo, mat);
           mesh.scale.z = d.scz;
           mesh.castShadow = true;
