@@ -65,12 +65,33 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
           return pts;
         };
         const capsuleGeo = (L, r0, r1, fT, fB) => new THREE.LatheGeometry(capsule(L, r0, r1, fT, fB).map((q) => new THREE.Vector2(Math.max(0.0001, q.r), q.y)).reverse(), 56);
+        // Interpolación suave (cúbica de Hermite) por los puntos [posición 0..1, valor] medidos sobre AEROSET.
+        const interp = (pts, x) => {
+          const n = pts.length;
+          let i = 0;
+          while (i < n - 2 && x > pts[i + 1][0]) i++;
+          const m = (k) => (k <= 0 ? (pts[1][1] - pts[0][1]) / (pts[1][0] - pts[0][0]) : k >= n - 1 ? (pts[n - 1][1] - pts[n - 2][1]) / (pts[n - 1][0] - pts[n - 2][0]) : (pts[k + 1][1] - pts[k - 1][1]) / (pts[k + 1][0] - pts[k - 1][0]));
+          const [s0, v0] = pts[i], [s1, v1] = pts[i + 1], h = s1 - s0, t = (x - s0) / h, t2 = t * t, t3 = t2 * t;
+          return (2 * t3 - 3 * t2 + 1) * v0 + (t3 - 2 * t2 + t) * h * m(i) + (-2 * t3 + 3 * t2) * v1 + (t3 - t2) * h * m(i + 1);
+        };
+        // Extremidad que NO es un cilindro: el grosor sigue un perfil (env = [posición, diámetro en cabezas]) y las dos puntas se cierran en semiesfera.
+        const limbPts = (L, env, N = 110) => {
+          const rT = (interp(env, 0) * D) / 2, rB = (interp(env, 1) * D) / 2, eT = rT / L, eB = rB / L, pts = [];
+          for (let k = 0; k <= N; k++) {
+            const u = (1 - Math.cos((Math.PI * k) / N)) / 2; // más puntos en las puntas
+            const b = (interp(env, u) * D) / 2;
+            const c = u < eT ? Math.sqrt(Math.max(0, 1 - Math.pow(1 - u / eT, 2))) : u > 1 - eB ? Math.sqrt(Math.max(0, 1 - Math.pow(1 - (1 - u) / eB, 2))) : 1;
+            pts.push({ r: Math.max(0.0001, b * c), y: L / 2 - u * L });
+          }
+          return pts;
+        };
+        const limbGeo = (pts) => new THREE.LatheGeometry(pts.map((q) => new THREE.Vector2(q.r, q.y)).reverse(), 56);
         // Lo mismo pero con el eje arqueado (codo): la parte central se desplaza `bow` hacia el lado `dir`.
-        const bentGeo = (L, r0, r1, bow, dir, seg = 48) => {
-          const pts = capsule(L, r0, r1), pos = [], idx = [];
+        const bentGeo = (pts, L, bow, dir, seg = 56) => {
+          const pos = [], idx = [];
           pts.forEach((q) => {
             const t = q.y / (L / 2), cx = dir * bow * Math.pow(1 - t * t, 2); // pendiente nula en las puntas: se mantienen redondas y la curva se concentra en el codo
-            for (let m = 0; m <= seg; m++) { const a = (m / seg) * Math.PI * 2; pos.push(cx + Math.max(0.0001, q.r) * Math.cos(a), q.y, Math.max(0.0001, q.r) * Math.sin(a)); }
+            for (let m = 0; m <= seg; m++) { const a = (m / seg) * Math.PI * 2; pos.push(cx + q.r * Math.cos(a), q.y, q.r * Math.sin(a)); }
           });
           for (let k = 0; k < pts.length - 1; k++) for (let m = 0; m < seg; m++) { const a = k * (seg + 1) + m, b = a + seg + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
           const g = new THREE.BufferGeometry();
@@ -83,22 +104,28 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         // Proporciones medidas sobre las capturas de AEROSET, en diámetros de cabeza (D = 1).
         const HR = 0.31, D = HR * 2;
         const TH = 2.17 * D, TR0 = 0.42 * D, TR1 = 0.56 * D; // torso: 2,17 de alto, 0,8 de ancho arriba y 1,1 abajo (medido 0,81 y 1,04)
-        const AL = 1.7 * D, AR0 = 0.15 * D, AR1 = 0.175 * D; // brazos: 1,7 de largo y ~0,28 de grosor
-        const LL = 2.0 * D, LR0 = 0.21 * D, LR1 = 0.24 * D; // piernas: 2,0 de largo y ~0,45 de grosor
+        const AL = 1.7 * D, LL = 2.0 * D; // largo de brazos y piernas
+        // Perfil de grosor medido sobre AEROSET (diámetro en cabezas a lo largo de la extremidad, de arriba abajo).
+        // Brazo: ligero vientre (máximo ~0,40 hacia la mitad) y puntas redondeadas de ~0,25 a 0,3.
+        const ARM_ENV = [[0, 0.24], [0.1, 0.27], [0.2, 0.32], [0.3, 0.36], [0.4, 0.39], [0.5, 0.4], [0.6, 0.38], [0.7, 0.36], [0.8, 0.33], [0.9, 0.3], [1, 0.28]];
+        // Pierna: máximo (~0,58) hacia el 60 %, cadera ~0,4 y pie ~0,5.
+        const LEG_ENV = [[0, 0.4], [0.1, 0.43], [0.2, 0.46], [0.3, 0.5], [0.4, 0.54], [0.5, 0.57], [0.6, 0.58], [0.7, 0.57], [0.8, 0.55], [0.9, 0.52], [1, 0.5]];
+        const ARM_PTS = limbPts(AL, ARM_ENV.map(([x, v]) => [x, v * 1.15])), LEG_PTS = limbPts(LL, LEG_ENV);
+        const ARn = 0.1; // radio del brazo cerca del hombro (para el hueco)
         const SPL = 0.22; // los brazos se abren unos 12° hacia fuera por abajo
-        const BOW = 0.15; // pose de reposo: los codos sobresalen un poco y las manos vuelven hacia el cuerpo
+        const BOW = 0.07; // pose de reposo: los codos sobresalen un poco y las manos vuelven hacia el cuerpo
         const LSP = 0.07; // pose de reposo: las piernas se abren ligeramente
         const trAt = (y) => TR0 + (TR1 - TR0) * Math.pow(Math.min(1, Math.max(0, (TH / 2 - y) / TH)), 1.1);
         const sy = TH / 2 - 0.14; // los brazos salen de lo más alto del torso, junto a los hombros
-        const ax = trAt(sy) + G + AR0 + 0.03 + (AL / 2) * Math.sin(SPL); // el extremo de arriba del brazo es lo más cercano al torso
+        const ax = trAt(sy) + G + ARn + 0.03 + (AL / 2) * Math.sin(SPL); // el extremo de arriba del brazo es lo más cercano al torso
         const ay = sy - (AL / 2) * Math.cos(SPL) + 0.02;
         const defs = {
           torso: { geo: capsuleGeo(TH, TR0, TR1, 1, 0.72), scz: 0.8, shape: new C.Box(new C.Vec3(0.3, TH * 0.45, 0.2)), mass: 4, k: 1, a: [0, 0, 0], pv: [0, 0, 0], tor: [0, 0, 0], rest: [0, 0, 0] },
           head: { geo: new THREE.SphereGeometry(HR, 40, 28), scz: 1, shape: new C.Sphere(HR), mass: 0.8, k: 1.12, a: [0, TH / 2 + G + HR, 0], pv: [0, -HR, 0], tor: [0, TH / 2, 0], rest: [0, 0, 0] },
-          al: { geo: bentGeo(AL, AR0, AR1, BOW, -1), scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [-ax, ay, 0], pv: [0, AL / 2, 0], tor: [-trAt(sy), sy, 0], rest: [0, 0, -SPL] },
-          ar: { geo: bentGeo(AL, AR0, AR1, BOW, 1), scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [ax, ay, 0], pv: [0, AL / 2, 0], tor: [trAt(sy), sy, 0], rest: [0, 0, SPL] },
-          ll: { geo: capsuleGeo(LL, LR0, LR1, 1, 1), scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [-0.2 - (LL / 2) * Math.sin(LSP), -TH / 2 - G - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [-0.2, -TH / 2 + 0.04, 0], rest: [0, 0, -LSP] },
-          lr: { geo: capsuleGeo(LL, LR0, LR1, 1, 1), scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [0.2 + (LL / 2) * Math.sin(LSP), -TH / 2 - G - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [0.2, -TH / 2 + 0.04, 0], rest: [0, 0, LSP] },
+          al: { geo: bentGeo(ARM_PTS, AL, BOW, -1), scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [-ax, ay, 0], pv: [0, AL / 2, 0], tor: [-trAt(sy), sy, 0], rest: [0, 0, -SPL] },
+          ar: { geo: bentGeo(ARM_PTS, AL, BOW, 1), scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [ax, ay, 0], pv: [0, AL / 2, 0], tor: [trAt(sy), sy, 0], rest: [0, 0, SPL] },
+          ll: { geo: limbGeo(LEG_PTS), scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [-0.25 - (LL / 2) * Math.sin(LSP), -TH / 2 - G - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [-0.2, -TH / 2 + 0.04, 0], rest: [0, 0, -LSP] },
+          lr: { geo: limbGeo(LEG_PTS), scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [0.25 + (LL / 2) * Math.sin(LSP), -TH / 2 - G - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [0.2, -TH / 2 + 0.04, 0], rest: [0, 0, LSP] },
         };
         const HOVER = G + LL + TH / 2 + 0.06;
         const world = new C.World({ gravity: new C.Vec3(0, -16, 0) });
