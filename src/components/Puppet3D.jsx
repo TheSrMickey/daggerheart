@@ -40,8 +40,8 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         const envTex = pmrem.fromScene(envScene, 0.02).texture;
         scene.environment = envTex;
         const cam = new THREE.PerspectiveCamera(30, W / H, 0.1, 60);
-        cam.position.set(0, 2.3, 9.2);
-        cam.lookAt(0, 1.3, 0);
+        cam.position.set(0, 3.2, 12.8);
+        cam.lookAt(0, 1.85, 0);
         scene.add(new THREE.HemisphereLight(0xdfe6ff, 0x4a3a66, 0.7));
         const dl = new THREE.DirectionalLight(0xffe2b0, 2.2);
         dl.position.set(-3.5, 6, 4.5);
@@ -68,17 +68,23 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
           return new THREE.LatheGeometry(pts.reverse(), 48);
         };
         const G = 0.15; // misma separación entre el torso y cada pieza
-        const TH = 1.0, TR0 = 0.21, TR1 = 0.33; // torso en alubia: algo más fino arriba que abajo
-        const trAt = (y) => TR0 + (TR1 - TR0) * Math.pow(Math.min(1, Math.max(0, (TH / 2 - y) / TH)), 0.95);
-        const HR = 0.31, AL = 0.64, LL = 0.68, AR0 = 0.085, AR1 = 0.14, LR0 = 0.095, LR1 = 0.16; // extremidades gruesas, como fideos
-        const sy = 0.41; // los brazos salen de la parte alta del torso, junto a los hombros
+        // Proporciones medidas sobre las capturas de AEROSET, en diámetros de cabeza (D = 1).
+        const HR = 0.31, D = HR * 2;
+        const TH = 2.17 * D, TR0 = 0.42 * D, TR1 = 0.56 * D; // torso: 2,17 de alto, 0,8 de ancho arriba y 1,1 abajo (medido 0,81 y 1,04)
+        const AL = 1.7 * D, AR0 = 0.13 * D, AR1 = 0.155 * D; // brazos: 1,7 de largo y ~0,28 de grosor
+        const LL = 2.0 * D, LR0 = 0.21 * D, LR1 = 0.24 * D; // piernas: 2,0 de largo y ~0,45 de grosor
+        const SPL = 0.22; // los brazos se abren unos 12° hacia fuera por abajo
+        const trAt = (y) => TR0 + (TR1 - TR0) * Math.pow(Math.min(1, Math.max(0, (TH / 2 - y) / TH)), 1.1);
+        const sy = TH / 2 - 0.14; // los brazos salen de lo más alto del torso, junto a los hombros
+        const ax = trAt(sy) + G + AR0 + 0.03 + (AL / 2) * Math.sin(SPL); // el extremo de arriba del brazo es lo más cercano al torso
+        const ay = sy - (AL / 2) * Math.cos(SPL) + 0.02;
         const defs = {
-          torso: { geo: lathe(TH, TR0, TR1, 0.3, 0.3, 0.9), scz: 0.8, shape: new C.Box(new C.Vec3(0.26, 0.45, 0.2)), mass: 3, k: 1, a: [0, 0, 0], pv: [0, 0, 0], tor: [0, 0, 0], rest: [0, 0, 0] },
+          torso: { geo: lathe(TH, TR0, TR1, 0.3, 0.22, 1.1), scz: 0.8, shape: new C.Box(new C.Vec3(0.3, TH * 0.45, 0.2)), mass: 4, k: 1, a: [0, 0, 0], pv: [0, 0, 0], tor: [0, 0, 0], rest: [0, 0, 0] },
           head: { geo: new THREE.SphereGeometry(HR, 40, 28), scz: 1, shape: new C.Sphere(HR), mass: 0.8, k: 1.12, a: [0, TH / 2 + G + HR, 0], pv: [0, -HR, 0], tor: [0, TH / 2, 0], rest: [0, 0, 0] },
-          al: { geo: lathe(AL, AR0, AR1, AR0 / AL, AR1 / AL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.1, AL / 2, 0.1)), mass: 0.5, k: 0.92, a: [-(trAt(sy) + G + AR0 + 0.03 + 0.053), sy - AL / 2 + 0.02, 0], pv: [0, AL / 2, 0], tor: [-trAt(sy), sy, 0], rest: [0, 0, -0.16] },
-          ar: { geo: lathe(AL, AR0, AR1, AR0 / AL, AR1 / AL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.1, AL / 2, 0.1)), mass: 0.5, k: 0.92, a: [trAt(sy) + G + AR0 + 0.03 + 0.053, sy - AL / 2 + 0.02, 0], pv: [0, AL / 2, 0], tor: [trAt(sy), sy, 0], rest: [0, 0, 0.16] },
-          ll: { geo: lathe(LL, LR0, LR1, LR0 / LL, LR1 / LL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.12, LL / 2, 0.12)), mass: 0.7, k: 0.8, a: [-0.19, -TH / 2 - G - LL / 2, 0], pv: [0, LL / 2, 0], tor: [-0.19, -TH / 2 + 0.04, 0], rest: [0, 0, 0] },
-          lr: { geo: lathe(LL, LR0, LR1, LR0 / LL, LR1 / LL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.12, LL / 2, 0.12)), mass: 0.7, k: 0.8, a: [0.19, -TH / 2 - G - LL / 2, 0], pv: [0, LL / 2, 0], tor: [0.19, -TH / 2 + 0.04, 0], rest: [0, 0, 0] },
+          al: { geo: lathe(AL, AR0, AR1, AR0 / AL, AR1 / AL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [-ax, ay, 0], pv: [0, AL / 2, 0], tor: [-trAt(sy), sy, 0], rest: [0, 0, -SPL] },
+          ar: { geo: lathe(AL, AR0, AR1, AR0 / AL, AR1 / AL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [ax, ay, 0], pv: [0, AL / 2, 0], tor: [trAt(sy), sy, 0], rest: [0, 0, SPL] },
+          ll: { geo: lathe(LL, LR0, LR1, LR0 / LL, LR1 / LL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [-0.2, -TH / 2 - G - LL / 2, 0], pv: [0, LL / 2, 0], tor: [-0.2, -TH / 2 + 0.04, 0], rest: [0, 0, 0] },
+          lr: { geo: lathe(LL, LR0, LR1, LR0 / LL, LR1 / LL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [0.2, -TH / 2 - G - LL / 2, 0], pv: [0, LL / 2, 0], tor: [0.2, -TH / 2 + 0.04, 0], rest: [0, 0, 0] },
         };
         const HOVER = G + LL + TH / 2 + 0.06;
         const world = new C.World({ gravity: new C.Vec3(0, -16, 0) });
@@ -120,7 +126,7 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
           const q = P.parts[n];
           if (ragdoll) world.addConstraint(new C.PointToPointConstraint(T, new C.Vec3(...q.d.tor), q.b, new C.Vec3(...q.d.pv), 80));
           else {
-            const k = n === "head" ? 260 : n[0] === "l" ? 230 : 190;
+            const k = n === "head" ? 260 : n[0] === "l" ? 320 : 210;
             q.sag = (q.d.mass * 16) / k; // lo que la gravedad hunde la pieza en reposo: se compensa para que el hueco sea el previsto
             P.springs.push({ n, sp: new C.Spring(T, q.b, { localAnchorA: new C.Vec3(q.d.a[0], q.d.a[1] + q.sag, q.d.a[2]), localAnchorB: new C.Vec3(0, 0, 0), restLength: 0, stiffness: k, damping: n === "head" ? 10 : 8 }) });
           }
