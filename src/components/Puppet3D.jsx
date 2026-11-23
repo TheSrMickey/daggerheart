@@ -21,6 +21,7 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         renderer.setSize(W, H);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.domElement.style.cssText = "width:100%;height:100%;display:block";
         el.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
         const pmrem = new THREE.PMREMGenerator(renderer);
@@ -99,7 +100,11 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         for (const n of ["head", "al", "ar", "ll", "lr"]) {
           const q = P.parts[n];
           if (ragdoll) world.addConstraint(new C.PointToPointConstraint(T, new C.Vec3(...q.d.tor), q.b, new C.Vec3(...q.d.pv), 80));
-          else P.springs.push({ n, sp: new C.Spring(T, q.b, { localAnchorA: new C.Vec3(...q.d.a), localAnchorB: new C.Vec3(0, 0, 0), restLength: 0, stiffness: n === "head" ? 260 : n[0] === "l" ? 230 : 190, damping: n === "head" ? 10 : 8 }) });
+          else {
+            const k = n === "head" ? 260 : n[0] === "l" ? 230 : 190;
+            q.sag = (q.d.mass * 16) / k; // lo que la gravedad hunde la pieza en reposo: se compensa para que el hueco sea el previsto
+            P.springs.push({ n, sp: new C.Spring(T, q.b, { localAnchorA: new C.Vec3(q.d.a[0], q.d.a[1] + q.sag, q.d.a[2]), localAnchorB: new C.Vec3(0, 0, 0), restLength: 0, stiffness: k, damping: n === "head" ? 10 : 8 }) });
+          }
         }
         const reset = () => {
           const y0 = ragdoll ? 2.9 : HOVER;
@@ -114,7 +119,23 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         };
         reset();
         let t = 0, acc = 0, last = performance.now(), lastReset = 0;
-        const an = (n, x, y) => P.springs.find((z) => z.n === n).sp.localAnchorA.set(x, y, 0);
+        const an = (n, x, y) => P.springs.find((z) => z.n === n).sp.localAnchorA.set(x, y + P.parts[n].sag, 0);
+        // Las fuerzas se aplican en cada paso de la física (el motor las borra tras cada paso).
+        const forces = () => {
+          if (ragdoll) return;
+          P.springs.forEach((z) => z.sp.applyForce());
+          // par que mantiene cada pieza en su postura, como un músculo blando
+          for (const n of ["head", "al", "ar", "ll", "lr"]) {
+            const q = P.parts[n], b = q.b;
+            const qe = new C.Quaternion();
+            b.quaternion.mult(q.qt.inverse(), qe);
+            const w = qe.w < 0 ? -1 : 1, ang = 2 * Math.acos(Math.min(1, Math.abs(qe.w))), sn = Math.sqrt(Math.max(1e-9, 1 - qe.w * qe.w));
+            const kp = 26 * b.mass, kd = 3.4 * b.mass;
+            b.torque.x += -kp * ang * ((qe.x * w) / sn) - kd * b.angularVelocity.x;
+            b.torque.y += -kp * ang * ((qe.y * w) / sn) - kd * b.angularVelocity.y;
+            b.torque.z += -kp * ang * ((qe.z * w) / sn) - kd * b.angularVelocity.z;
+          }
+        };
         const step = () => {
           const now = performance.now(), dt = Math.min(0.05, (now - last) / 1000);
           last = now; t += dt;
@@ -130,21 +151,9 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
             an("lr", D.lr.a[0] - sw * 0.1, D.lr.a[1] + Math.max(0, -sw) * 0.2);
             an("al", D.al.a[0], D.al.a[1] + sw * 0.12);
             an("ar", D.ar.a[0], D.ar.a[1] - sw * 0.12);
-            P.springs.forEach((z) => z.sp.applyForce());
-            // par que mantiene cada pieza en su postura, como un músculo blando
-            for (const n of ["head", "al", "ar", "ll", "lr"]) {
-              const q = P.parts[n], b = q.b;
-              const qe = new C.Quaternion();
-              b.quaternion.mult(q.qt.inverse(), qe);
-              const w = qe.w < 0 ? -1 : 1, ang = 2 * Math.acos(Math.min(1, Math.abs(qe.w))), sn = Math.sqrt(Math.max(1e-9, 1 - qe.w * qe.w));
-              const kp = 26 * b.mass, kd = 3.4 * b.mass;
-              b.torque.x += -kp * ang * ((qe.x * w) / sn) - kd * b.angularVelocity.x;
-              b.torque.y += -kp * ang * ((qe.y * w) / sn) - kd * b.angularVelocity.y;
-              b.torque.z += -kp * ang * ((qe.z * w) / sn) - kd * b.angularVelocity.z;
-            }
           }
           acc += dt;
-          while (acc >= 1 / 120) { world.step(1 / 120); acc -= 1 / 120; }
+          while (acc >= 1 / 120) { forces(); world.step(1 / 120); acc -= 1 / 120; }
           Object.values(P.parts).forEach((q) => { q.mesh.position.copy(q.b.position); q.mesh.quaternion.copy(q.b.quaternion); });
           renderer.render(scene, cam);
           raf = requestAnimationFrame(step);
@@ -164,5 +173,5 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
     })();
     return () => { dead = true; cleanup(); };
   }, [color, pose]);
-  return <div ref={host} className={"pp3d " + className} aria-hidden="true" />;
+  return <div ref={host} className={"pp3d " + className} style={{ width: "100%", height: "100%" }} aria-hidden="true" />;
 }
