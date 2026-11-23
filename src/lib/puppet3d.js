@@ -131,19 +131,38 @@ export function createRig({ THREE, C }, scene, world, { color = "#E3B04B", x = 0
   try { base = new THREE.Color(color); } catch { base = new THREE.Color("#E3B04B"); }
   const rim = base.clone().lerp(new THREE.Color(0xb48be8), 0.38); // borde violeta de la cáscara
   const parts = {}, springs = [];
+  const bend = { ll: { value: 0 }, lr: { value: 0 } }; // flexión de la rodilla en radianes (la malla se dobla hacia atrás por la mitad de la pierna)
+  const bendShader = (sh, u) => {
+    sh.uniforms.uBend = u;
+    sh.vertexShader = sh.vertexShader
+      .replace("#include <common>", "#include <common>\nuniform float uBend;")
+      .replace("#include <beginnormal_vertex>", `vec3 objectNormal = vec3( normal );
+        { float a2 = uBend * (1.0 - smoothstep(-0.38, 0.12, position.y)); float cb = cos(a2), sb = sin(a2); float ny = objectNormal.y, nz = objectNormal.z; objectNormal.y = ny * cb - nz * sb; objectNormal.z = ny * sb + nz * cb; }
+        #ifdef USE_TANGENT
+        vec3 objectTangent = vec3( tangent.xyz );
+        #endif`)
+      .replace("#include <begin_vertex>", `vec3 transformed = vec3( position );
+        { float a2 = uBend * (1.0 - smoothstep(-0.38, 0.12, position.y)); float cb = cos(a2), sb = sin(a2); float py = position.y, pz = position.z; transformed.y = py * cb - pz * sb; transformed.z = py * sb + pz * cb; }
+        #ifdef USE_ALPHAHASH
+        vPosition = vec3( position );
+        #endif`);
+  };
   for (const [n, d] of Object.entries(defs)) {
     // Cristal de dos capas: núcleo vivo por dentro y cáscara translúcida por fuera.
     const grp = new THREE.Group();
-    const core = new THREE.Mesh(d.geo, new THREE.MeshPhysicalMaterial({
+    const coreMat = new THREE.MeshPhysicalMaterial({
       color: base.clone().multiplyScalar(d.k * 0.72), emissive: base.clone().multiplyScalar(0.03), roughness: 0.28, metalness: 0,
       clearcoat: 0.7, clearcoatRoughness: 0.06, envMapIntensity: 0.22,
-    }));
+    });
+    if (bend[n]) coreMat.onBeforeCompile = (sh) => bendShader(sh, bend[n]);
+    const core = new THREE.Mesh(d.geo, coreMat);
     core.scale.set(0.85, n === "head" ? 0.85 : 0.93, 0.85 * d.scz); // la cabeza se reduce por igual en los tres ejes para seguir siendo esférica
     const shellMat = new THREE.MeshPhysicalMaterial({
       color: base.clone().lerp(new THREE.Color(0xffffff), 0.18), transparent: true, opacity: 0.4, roughness: 0.04, metalness: 0,
       clearcoat: 1, clearcoatRoughness: 0.03, ior: 1.45, envMapIntensity: 1.8, depthWrite: false,
     });
     shellMat.onBeforeCompile = (sh) => {
+      if (bend[n]) bendShader(sh, bend[n]);
       sh.uniforms.rimCol = { value: rim };
       sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform vec3 rimCol;").replace("#include <dithering_fragment>", `#include <dithering_fragment>
         float fr = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 1.6);
@@ -161,7 +180,7 @@ export function createRig({ THREE, C }, scene, world, { color = "#E3B04B", x = 0
     world.addBody(b);
     const qt = new C.Quaternion();
     qt.setFromEuler(d.rest[0], d.rest[1], d.rest[2]);
-    parts[n] = { b, grp, d, qt, mats: [core.material, shellMat] };
+    parts[n] = { b, grp, d, qt, mats: [coreMat, shellMat] };
   }
   const T = parts.torso.b;
   for (const n of ["head", "al", "ar", "ll", "lr"]) {
@@ -176,32 +195,54 @@ export function createRig({ THREE, C }, scene, world, { color = "#E3B04B", x = 0
   }
   T.position.set(x, HOVER, z);
   T.quaternion.set(0, 0, 0, 1);
-  const an = (n, ax2, ay2) => springs.find((s) => s.n === n).sp.localAnchorA.set(ax2, ay2 + parts[n].sag, 0);
+  const setA = (n, ox, oy, oz) => springs.find((sp) => sp.n === n).sp.localAnchorA.set(ox, oy + parts[n].sag, oz);
+  const yawAxis = new C.Vec3(0, 1, 0);
+  const tgt = { x, y: HOVER, z, yaw: 0 };
+  const OM = 18, ZETA = 0.7; // frecuencia propia (rad/s) y amortiguación de la postura de cada pieza
   return {
     HOVER,
     topY: HOVER + TH / 2 + Gh + 2 * HR, // altura de lo más alto de la cabeza
-    // Mueve el torso hasta (tx, ty, tz); sw = balanceo de brazos y piernas (-1..1).
-    drive(dt, tx, ty, tz, sw) {
-      const k = Math.max(dt, 1e-3);
-      T.velocity.set((tx - T.position.x) / k, (ty - T.position.y) / k, (tz - T.position.z) / k);
-      an("ll", defs.ll.a[0] + sw * 0.1, defs.ll.a[1] + Math.max(0, sw) * 0.2);
-      an("lr", defs.lr.a[0] - sw * 0.1, defs.lr.a[1] + Math.max(0, -sw) * 0.2);
-      an("al", defs.al.a[0], defs.al.a[1] + sw * 0.12);
-      an("ar", defs.ar.a[0], defs.ar.a[1] - sw * 0.12);
+    // Objetivo del torso: posición (x, z), giro (yaw), amplitud de la marcha (amp 0..1) y fase del paso (phase).
+    // De perfil (yaw = ±90°) las piernas avanzan y retroceden, el pie se levanta al avanzar y la rodilla se flexiona.
+    drive({ x: tx, z: tz, yaw = 0, amp = 0, phase = 0, t = 0, ph0 = 0 }) {
+      tgt.x = tx; tgt.z = tz; tgt.yaw = yaw;
+      const idle = 1 - amp;
+      tgt.y = HOVER + amp * Math.abs(Math.sin(phase)) * 0.05 + idle * Math.sin(t * 2 + ph0) * 0.025;
+      for (const [n, off] of [["ll", 0], ["lr", Math.PI]]) {
+        const a = defs[n].a, p = phase + off, sn = Math.sin(p), fw = Math.max(0, Math.cos(p)); // fw > 0 mientras la pierna avanza
+        setA(n, a[0], a[1] + amp * 0.16 * fw, amp * 0.34 * sn);
+        bend[n].value = idle * 0.04 + amp * (0.12 + 0.6 * fw);
+      }
+      for (const [n, off] of [["al", Math.PI], ["ar", 0]]) { // cada brazo se balancea al contrario que la pierna de su lado
+        const a = defs[n].a;
+        setA(n, a[0], a[1] + idle * Math.sin(t * 1.6 + ph0) * 0.03, amp * 0.3 * Math.sin(phase + off));
+      }
+    },
+    // Antes de los pasos de física de este fotograma: coloca el torso (movimiento exacto durante `span` segundos).
+    prepare(span) {
+      T.quaternion.setFromAxisAngle(yawAxis, tgt.yaw);
+      if (span > 0) T.velocity.set((tgt.x - T.position.x) / span, (tgt.y - T.position.y) / span, (tgt.z - T.position.z) / span);
+      else T.velocity.set(0, 0, 0);
     },
     // Las fuerzas se aplican en cada paso de la física (el motor las borra tras cada paso).
     forces() {
-      springs.forEach((s) => s.sp.applyForce());
-      // par que mantiene cada pieza en su postura, como un músculo blando
+      springs.forEach((sp) => sp.sp.applyForce());
+      // Par que mantiene cada pieza en su postura (la del torso girada): resorte amortiguado con la INERCIA real de cada eje.
+      // Antes se usaba la masa y en las piezas finas, con muy poca inercia al girar sobre su propio eje, la amortiguación
+      // era inestable: temblaban y la simulación acababa en un valor no válido (la pierna desaparecía).
       for (const n of ["head", "al", "ar", "ll", "lr"]) {
         const q = parts[n], b = q.b;
+        const target = new C.Quaternion();
+        T.quaternion.mult(q.qt, target);
         const qe = new C.Quaternion();
-        b.quaternion.mult(q.qt.inverse(), qe);
+        b.quaternion.mult(target.inverse(), qe);
         const w = qe.w < 0 ? -1 : 1, ang = 2 * Math.acos(Math.min(1, Math.abs(qe.w))), sn = Math.sqrt(Math.max(1e-9, 1 - qe.w * qe.w));
-        const kp = 26 * b.mass, kd = 3.4 * b.mass;
-        b.torque.x += -kp * ang * ((qe.x * w) / sn) - kd * b.angularVelocity.x;
-        b.torque.y += -kp * ang * ((qe.y * w) / sn) - kd * b.angularVelocity.y;
-        b.torque.z += -kp * ang * ((qe.z * w) / sn) - kd * b.angularVelocity.z;
+        const inv = b.quaternion.inverse();
+        const eL = inv.vmult(new C.Vec3(((qe.x * w) / sn) * ang, ((qe.y * w) / sn) * ang, ((qe.z * w) / sn) * ang));
+        const wL = inv.vmult(b.angularVelocity);
+        const I = b.inertia;
+        const tW = b.quaternion.vmult(new C.Vec3(-OM * OM * I.x * eL.x - 2 * ZETA * OM * I.x * wL.x, -OM * OM * I.y * eL.y - 2 * ZETA * OM * I.y * wL.y, -OM * OM * I.z * eL.z - 2 * ZETA * OM * I.z * wL.z));
+        b.torque.x += tW.x; b.torque.y += tW.y; b.torque.z += tW.z;
       }
     },
     sync() { Object.values(parts).forEach((q) => { q.grp.position.copy(q.b.position); q.grp.quaternion.copy(q.b.quaternion); }); },
