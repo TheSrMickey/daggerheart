@@ -63,8 +63,8 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         const defs = {
           torso: { geo: lathe(TH, TR0, TR1, 0.3, 0.3, 0.9), scz: 0.8, shape: new C.Box(new C.Vec3(0.26, 0.45, 0.2)), mass: 3, k: 1, a: [0, 0, 0], pv: [0, 0, 0], tor: [0, 0, 0], rest: [0, 0, 0] },
           head: { geo: new THREE.SphereGeometry(HR, 40, 28), scz: 1, shape: new C.Sphere(HR), mass: 0.8, k: 1.12, a: [0, TH / 2 + G + HR, 0], pv: [0, -HR, 0], tor: [0, TH / 2, 0], rest: [0, 0, 0] },
-          al: { geo: lathe(AL, AR0, AR1, AR0 / AL, AR1 / AL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.1, AL / 2, 0.1)), mass: 0.5, k: 0.92, a: [-(trAt(sy) + G + AR0 + 0.03), sy - AL / 2 + 0.02, 0], pv: [0, AL / 2, 0], tor: [-trAt(sy), sy, 0], rest: [0, 0, 0.16] },
-          ar: { geo: lathe(AL, AR0, AR1, AR0 / AL, AR1 / AL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.1, AL / 2, 0.1)), mass: 0.5, k: 0.92, a: [trAt(sy) + G + AR0 + 0.03, sy - AL / 2 + 0.02, 0], pv: [0, AL / 2, 0], tor: [trAt(sy), sy, 0], rest: [0, 0, -0.16] },
+          al: { geo: lathe(AL, AR0, AR1, AR0 / AL, AR1 / AL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.1, AL / 2, 0.1)), mass: 0.5, k: 0.92, a: [-(trAt(sy) + G + AR0 + 0.03 + 0.053), sy - AL / 2 + 0.02, 0], pv: [0, AL / 2, 0], tor: [-trAt(sy), sy, 0], rest: [0, 0, -0.16] },
+          ar: { geo: lathe(AL, AR0, AR1, AR0 / AL, AR1 / AL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.1, AL / 2, 0.1)), mass: 0.5, k: 0.92, a: [trAt(sy) + G + AR0 + 0.03 + 0.053, sy - AL / 2 + 0.02, 0], pv: [0, AL / 2, 0], tor: [trAt(sy), sy, 0], rest: [0, 0, 0.16] },
           ll: { geo: lathe(LL, LR0, LR1, LR0 / LL, LR1 / LL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.12, LL / 2, 0.12)), mass: 0.7, k: 0.8, a: [-0.19, -TH / 2 - G - LL / 2, 0], pv: [0, LL / 2, 0], tor: [-0.19, -TH / 2 + 0.04, 0], rest: [0, 0, 0] },
           lr: { geo: lathe(LL, LR0, LR1, LR0 / LL, LR1 / LL, 1.15), scz: 1, shape: new C.Box(new C.Vec3(0.12, LL / 2, 0.12)), mass: 0.7, k: 0.8, a: [0.19, -TH / 2 - G - LL / 2, 0], pv: [0, LL / 2, 0], tor: [0.19, -TH / 2 + 0.04, 0], rest: [0, 0, 0] },
         };
