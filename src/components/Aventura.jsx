@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Dices, Image as ImageIcon, Backpack, BookOpen, MessageCircle, Send, Reply, Trash2, Trophy, Feather, Flame, HandCoins, Check, Clock, Coins, Eye, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
 import { Avatar } from "./Social";
+import Puppet3D from "./Puppet3D";
 import { rollDuality, effectOf, drawEncargos, ACTIONS, ENCARGOS, DIFF } from "@/lib/aventuraData";
 import { loadZoneImg, saveZoneImg, syncTraveller, startAct, abandonAct, takeOffers, resolveAct, loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound, loadCity, decide, loadChat, postChat, loadNotes, postNote, replyNote, deleteNote } from "@/lib/social";
 
@@ -651,6 +652,8 @@ export function AventuraPage({ chars, classColor, onCreate }) {
   const [crowd, setCrowd] = useState([]);
   const [city, setCity] = useState({ pulse: { Prosperidad: 50, Orden: 50, Misterio: 50 }, log: [] });
   const [busy, setBusy] = useState(false);
+  const [gl, setGl] = useState(false); // el monigote 3D solo se muestra si el navegador tiene WebGL
+  useEffect(() => { try { const cv = document.createElement("canvas"); setGl(!!(cv.getContext("webgl2") || cv.getContext("webgl"))); } catch { setGl(false); } }, []);
   useEffect(() => {
     let alive = true;
     const pull = () => {
@@ -729,7 +732,7 @@ export function AventuraPage({ chars, classColor, onCreate }) {
           <header><i>{me ? "✓" : "2"}</i><div><h2>{me ? "Tu viajero" : "Tu ficha de viajero"}</h2><p>{me ? "Ya estás en Brumaria. Solo hay un viajero por cuenta." : "Lo que llevarás contigo a la ciudad."}</p></div></header>
           {c ? (
             <div className="adv-card">
-              <div className="adv-portrait"><span>{((me ? me.name : c.name) || "?").charAt(0).toUpperCase()}</span></div>
+              <div className={"adv-portrait" + (gl ? " is-3d" : "")}>{gl ? <Puppet3D color={classColor(c.cls)} /> : <span>{((me ? me.name : c.name) || "?").charAt(0).toUpperCase()}</span>}</div>
               <h3 className="mh-serif">{me ? me.name : c.name}</h3>
               <p className="adv-sub">{[c.cls, c.anc].filter(Boolean).join(" · ") || "Viajero"}</p>
               <div className="adv-stats">
@@ -899,6 +902,7 @@ html[data-mh-theme="light"] .fs-pn .adv-tabs button { color: #3d3550; border-col
 html[data-mh-theme="light"] .fs-poi button.is-on, html[data-mh-theme="light"] .fs-menu button.is-on { background: color-mix(in srgb, var(--dc) 38%, #fffbf0); border-color: var(--dc); color: #1f1a2e; }
 html[data-mh-theme="light"] .fs-run { background: color-mix(in srgb, var(--dc) 20%, #fffbf0); } html[data-mh-theme="light"] .fs-bar { background: rgba(43,36,56,.15); }
 html[data-mh-theme="light"] .fs-g.is-m i { color: color-mix(in srgb, var(--pc) 55%, #1f1a2e); }
+.adv-portrait.is-3d { width: 128px; height: 152px; border-radius: 0; background: none; box-shadow: none; display: block; } .pp3d { width: 100%; height: 100%; } .pp3d canvas { width: 100% !important; height: 100% !important; display: block; }
 @media (max-width: 900px) { .adv-g { overflow-y: auto; } }
 @media (max-width: 720px) { .fs-pn { width: auto; right: 14px; top: auto; height: 46%; bottom: 92px; } .fs-enc { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .adv-g { grid-template-columns: 1fr; } .adv-sheet { position: static; } .adv-hi { padding: 22px 20px; } .adv-hero { min-height: 300px; } }
