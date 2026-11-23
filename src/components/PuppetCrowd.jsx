@@ -29,7 +29,7 @@ export default function PuppetCrowd({ people, meId }) {
               const hw = Math.max(1, st.halfWidth() - 1.4), x = (Math.random() * 2 - 1) * hw, z = (Math.random() * 2 - 1) * 0.9;
               const label = document.createElement("span");
               labels.current.appendChild(label);
-              r = { color: p.color, rig: createRig(kit, st.scene, st.world, { color: p.color, x, z }), label, w: { x, z, tx: x, wait: 0.4 + Math.random() * 2, phase: Math.random() * 6, speed: 1.1 + Math.random() * 0.5 } };
+              r = { color: p.color, rig: createRig(kit, st.scene, st.world, { color: p.color, x, z }), label, w: { x, z, tx: x, wait: 0.4 + Math.random() * 2, ph0: Math.random() * 6, phase: Math.random() * 6, speed: 1 + Math.random() * 0.35, amp: 0, yaw: 0 } };
               rigs.set(p.id, r);
             }
             r.label.textContent = p.name;
@@ -45,21 +45,28 @@ export default function PuppetCrowd({ people, meId }) {
           const hw = Math.max(1, st.halfWidth() - 1.4);
           for (const r of rigs.values()) {
             const w = r.w;
-            let sw = 0, ty;
-            if (w.wait > 0) { // parado: respira y se balancea un poco
-              w.wait -= dt;
-              ty = r.rig.HOVER + Math.sin(t * 2 + w.phase) * 0.025;
-              sw = Math.sin(t * 1.6 + w.phase) * 0.12;
-            } else {
+            let walking = false, dir = 0;
+            if (w.wait > 0) w.wait -= dt; // parado: respira y mira de frente
+            else {
               const d = w.tx - w.x;
-              if (Math.abs(d) < 0.06) { w.wait = 1.2 + Math.random() * 3; w.tx = (Math.random() * 2 - 1) * hw; } else { w.x += Math.sign(d) * w.speed * dt; sw = Math.sin(t * 7.5 + w.phase); }
-              ty = r.rig.HOVER + Math.abs(Math.sin(t * 7.5 + w.phase)) * 0.07;
+              if (Math.abs(d) < 0.06) { w.wait = 1.2 + Math.random() * 3; w.tx = (Math.random() * 2 - 1) * hw; } else { walking = true; dir = Math.sign(d); w.x += dir * w.speed * dt; }
             }
             w.x = Math.max(-hw, Math.min(hw, w.x));
-            r.rig.drive(dt, w.x, ty, w.z, sw);
+            // al caminar se pone de perfil, mirando hacia donde va; parado vuelve a mirar de frente
+            const yawT = walking ? dir * Math.PI / 2 : 0;
+            w.yaw += (yawT - w.yaw) * Math.min(1, dt * 7);
+            w.amp += ((walking ? 1 : 0) - w.amp) * Math.min(1, dt * 8);
+            if (walking) w.phase += dt * 6.4 * (w.speed / 1.15);
+            r.rig.drive({ x: w.x, z: w.z, yaw: w.yaw, amp: w.amp, phase: w.phase, t, ph0: w.ph0 });
           }
+          // Pasos de física fijos (1/120 s); el torso se coloca de forma exacta durante los pasos de este fotograma.
           acc += dt;
-          while (acc >= 1 / 120) { for (const r of rigs.values()) r.rig.forces(); st.world.step(1 / 120); acc -= 1 / 120; }
+          const n = Math.floor(acc * 120);
+          if (n > 0) {
+            for (const r of rigs.values()) r.rig.prepare(n / 120);
+            for (let k = 0; k < n; k++) { for (const r of rigs.values()) r.rig.forces(); st.world.step(1 / 120); }
+            acc -= n / 120;
+          }
           for (const r of rigs.values()) {
             r.rig.sync();
             const [px, py] = st.project(r.w.x, r.rig.topY + 0.3, r.w.z);
