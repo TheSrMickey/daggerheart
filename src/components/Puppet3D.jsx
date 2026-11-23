@@ -4,7 +4,7 @@
 // pose: "idle" (reposo) · "walk" (camina) · "jump" (salta) · "ragdoll" (muñeco de trapo, las piezas se unen y caen).
 import { useEffect, useRef } from "react";
 
-export default function Puppet3D({ color = "#E3B04B", pose = "idle", className = "" }) {
+export default function Puppet3D({ color = "#E3B04B", pose = "idle", variant = "enaris", className = "" }) {
   const host = useRef(null);
   useEffect(() => {
     let dead = false, raf = 0, cleanup = () => {};
@@ -23,6 +23,12 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         renderer.domElement.style.cssText = "width:100%;height:100%;display:block";
         el.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
+        let cam; // se crea más abajo; el observador de tamaño la usa
+        const ro = new ResizeObserver(() => {
+          const w = el.clientWidth, h = el.clientHeight;
+          if (w > 0 && h > 0 && cam) { renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+        });
+        ro.observe(el);
         const pmrem = new THREE.PMREMGenerator(renderer);
         // Entorno de cielo azul con ventanales luminosos: da los reflejos de cristal brillante del estilo Frutiger Aero (como en AEROSET).
         const envScene = new THREE.Scene();
@@ -39,9 +45,10 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         });
         const envTex = pmrem.fromScene(envScene, 0.02).texture;
         scene.environment = envTex;
-        const cam = new THREE.PerspectiveCamera(30, W / H, 0.1, 60);
-        cam.position.set(0, 3.2, 12.8);
-        cam.lookAt(0, 1.85, 0);
+        cam = new THREE.PerspectiveCamera(30, W / H, 0.1, 60);
+        const wide = pose === "t"; // en cruz la figura es más ancha: cámara algo más cerca y centrada
+        cam.position.set(0, wide ? 2.6 : 3.2, wide ? 8.4 : 12.8);
+        cam.lookAt(0, wide ? 1.55 : 1.85, 0);
         scene.add(new THREE.HemisphereLight(0xdfe6ff, 0x4a3a66, 0.7));
         const dl = new THREE.DirectionalLight(0xffe2b0, 2.2);
         dl.position.set(-3.5, 6, 4.5);
@@ -91,10 +98,12 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
           for (let k = 0; k < pos.count; k++) uv.setY(k, (L / 2 - pos.getY(k)) / L); // la rejilla sigue el largo real de la extremidad
           return g;
         };
-        const G = 0.15; // misma separación entre el torso y cada pieza
+        const aero = variant === "aeroset", tp = pose === "t";
+        // Huecos con el torso: los medidos en AEROSET o los nuestros (uniformes). pose "t" = brazos en cruz y sin animación.
+        const Gh = aero ? 0.08 : 0.15, Ga = aero ? 0.075 : 0.15, Gl = aero ? 0.02 : 0.15, LX = aero ? 0.18 : 0.25;
         // Proporciones medidas sobre las capturas de AEROSET, en diámetros de cabeza (D = 1).
         const HR = 0.31, D = HR * 2;
-        const TH = 2.17 * D, TR0 = 0.42 * D, TR1 = 0.56 * D; // torso: 2,17 de alto, 0,8 de ancho arriba y 1,1 abajo (medido 0,81 y 1,04)
+        const TH = 2.17 * D, TR0 = (aero ? 0.4 : 0.42) * D, TR1 = (aero ? 0.52 : 0.56) * D; // torso: 2,17 de alto, 0,8 de ancho arriba y 1,1 abajo (medido 0,81 y 1,04)
         const AL = 1.7 * D, LL = 2.0 * D; // largo de brazos y piernas
         // Extremidades lisas, algo más finas junto al torso y más gruesas hacia el extremo (como en AEROSET), con puntas semiesféricas.
         const ARM_ENV = [[0, 0.3], [0.3, 0.36], [0.7, 0.4], [1, 0.42]];
@@ -102,20 +111,20 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         const ARM_PTS = limbPts(AL, ARM_ENV), LEG_PTS = limbPts(LL, LEG_ENV);
         const ARn = 0.1; // radio del brazo cerca del hombro (para el hueco)
         const SPL = 0.22; // los brazos se abren unos 12° hacia fuera por abajo
-        const LSP = 0.07; // pose de reposo: las piernas se abren ligeramente
+        const LSP = tp ? 0 : 0.07; // pose de reposo: las piernas se abren ligeramente
         const trAt = (y) => TR0 + (TR1 - TR0) * Math.pow(Math.min(1, Math.max(0, (TH / 2 - y) / TH)), 1.1);
-        const sy = TH / 2 - 0.14; // los brazos salen de lo más alto del torso, junto a los hombros
-        const ax = trAt(sy) + G + ARn + 0.03 + (AL / 2) * Math.sin(SPL); // el extremo de arriba del brazo es lo más cercano al torso
+        const sy = TH / 2 - (aero || tp ? 0.2 : 0.14); // los brazos salen de lo más alto del torso, junto a los hombros
+        const ax = trAt(sy) + Ga + ARn + 0.03 + (AL / 2) * Math.sin(SPL); // el extremo de arriba del brazo es lo más cercano al torso
         const ay = sy - (AL / 2) * Math.cos(SPL) + 0.02;
         const defs = {
-          torso: { geo: capsuleGeo(TH, TR0, TR1, 1, 0.72), scz: 0.8, shape: new C.Box(new C.Vec3(0.3, TH * 0.45, 0.2)), mass: 4, k: 1, a: [0, 0, 0], pv: [0, 0, 0], tor: [0, 0, 0], rest: [0, 0, 0] },
-          head: { geo: new THREE.SphereGeometry(HR, 40, 28), scz: 1, shape: new C.Sphere(HR), mass: 0.8, k: 1.12, a: [0, TH / 2 + G + HR, 0], pv: [0, -HR, 0], tor: [0, TH / 2, 0], rest: [0, 0, 0] },
-          al: { geo: limbGeo(ARM_PTS, AL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [-ax, ay, 0], pv: [0, AL / 2, 0], tor: [-trAt(sy), sy, 0], rest: [0, 0, -SPL] },
-          ar: { geo: limbGeo(ARM_PTS, AL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [ax, ay, 0], pv: [0, AL / 2, 0], tor: [trAt(sy), sy, 0], rest: [0, 0, SPL] },
-          ll: { geo: limbGeo(LEG_PTS, LL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [-0.25 - (LL / 2) * Math.sin(LSP), -TH / 2 - G - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [-0.2, -TH / 2 + 0.04, 0], rest: [0, 0, -LSP] },
-          lr: { geo: limbGeo(LEG_PTS, LL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [0.25 + (LL / 2) * Math.sin(LSP), -TH / 2 - G - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [0.2, -TH / 2 + 0.04, 0], rest: [0, 0, LSP] },
+          torso: { geo: capsuleGeo(TH, TR0, TR1, 1, aero ? 0.55 : 0.72), scz: 0.8, shape: new C.Box(new C.Vec3(0.3, TH * 0.45, 0.2)), mass: 4, k: 1, a: [0, 0, 0], pv: [0, 0, 0], tor: [0, 0, 0], rest: [0, 0, 0] },
+          head: { geo: new THREE.SphereGeometry(HR, 40, 28), scz: 1, shape: new C.Sphere(HR), mass: 0.8, k: 1.12, a: [0, TH / 2 + Gh + HR, 0], pv: [0, -HR, 0], tor: [0, TH / 2, 0], rest: [0, 0, 0] },
+          al: { geo: limbGeo(ARM_PTS, AL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: tp ? [-(trAt(sy) + Ga + AL / 2), sy, 0] : [-ax, ay, 0], pv: [0, AL / 2, 0], tor: [-trAt(sy), sy, 0], rest: [0, 0, tp ? -Math.PI / 2 : -SPL] },
+          ar: { geo: limbGeo(ARM_PTS, AL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: tp ? [trAt(sy) + Ga + AL / 2, sy, 0] : [ax, ay, 0], pv: [0, AL / 2, 0], tor: [trAt(sy), sy, 0], rest: [0, 0, tp ? Math.PI / 2 : SPL] },
+          ll: { geo: limbGeo(LEG_PTS, LL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [-LX - (LL / 2) * Math.sin(LSP), -TH / 2 - Gl - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [-0.2, -TH / 2 + 0.04, 0], rest: [0, 0, -LSP] },
+          lr: { geo: limbGeo(LEG_PTS, LL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [LX + (LL / 2) * Math.sin(LSP), -TH / 2 - Gl - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [0.2, -TH / 2 + 0.04, 0], rest: [0, 0, LSP] },
         };
-        const HOVER = G + LL + TH / 2 + 0.06;
+        const HOVER = Gl + LL + TH / 2 + 0.06;
         const world = new C.World({ gravity: new C.Vec3(0, -16, 0) });
         const gb = new C.Body({ mass: 0, shape: new C.Plane(), collisionFilterGroup: 1, collisionFilterMask: 2 });
         gb.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
@@ -150,7 +159,7 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
             color: base.clone().multiplyScalar(d.k * 0.72), map: tex, emissive: base.clone().multiplyScalar(0.03), roughness: 0.28, metalness: 0,
             clearcoat: 0.7, clearcoatRoughness: 0.06, envMapIntensity: 0.22,
           }));
-          core.scale.set(0.84, 0.95, 0.84 * d.scz);
+          core.scale.set(0.85, n === "head" ? 0.85 : 0.93, 0.85 * d.scz); // la cabeza se reduce por igual en los tres ejes para seguir siendo esférica
           const shellMat = new THREE.MeshPhysicalMaterial({
             color: base.clone().lerp(new THREE.Color(0xffffff), 0.18), transparent: true, opacity: 0.4, roughness: 0.04, metalness: 0,
             clearcoat: 1, clearcoatRoughness: 0.03, ior: 1.45, envMapIntensity: 1.8, depthWrite: false,
@@ -220,7 +229,7 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
           const now = performance.now(), dt = Math.min(0.05, (now - last) / 1000);
           last = now; t += dt;
           if (ragdoll && t - lastReset > 3.6) { lastReset = t; reset(); }
-          if (!ragdoll) {
+          if (!ragdoll && !tp) {
             let tx = 0, ty = HOVER, sw = 0;
             if (pose === "walk") { tx = 0.7 * Math.sin(t * 1.2); sw = Math.sin(t * 7.5); ty = HOVER + Math.abs(Math.sin(t * 7.5)) * 0.07; }
             else if (pose === "jump") { const ph = (t * 0.8) % 1; ty = HOVER + (ph < 0.5 ? 0.9 * Math.sin((ph / 0.5) * Math.PI) : 0); }
@@ -233,7 +242,7 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
             an("ar", D.ar.a[0], D.ar.a[1] - sw * 0.12);
           }
           acc += dt;
-          while (acc >= 1 / 120) { forces(); world.step(1 / 120); acc -= 1 / 120; }
+          if (!tp) while (acc >= 1 / 120) { forces(); world.step(1 / 120); acc -= 1 / 120; }
           Object.values(P.parts).forEach((q) => { q.mesh.position.copy(q.b.position); q.mesh.quaternion.copy(q.b.quaternion); });
           renderer.render(scene, cam);
           raf = requestAnimationFrame(step);
@@ -241,6 +250,7 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         raf = requestAnimationFrame(step);
         cleanup = () => {
           cancelAnimationFrame(raf);
+          ro.disconnect();
           Object.values(P.parts).forEach((q) => { q.d.geo.dispose(); q.mats.forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); }); });
           gridTex.dispose();
           envTex.dispose();
@@ -253,6 +263,6 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
       }
     })();
     return () => { dead = true; cleanup(); };
-  }, [color, pose]);
+  }, [color, pose, variant]);
   return <div ref={host} className={"pp3d " + className} style={{ width: "100%", height: "100%" }} aria-hidden="true" />;
 }
