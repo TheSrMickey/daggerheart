@@ -85,19 +85,10 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
           }
           return pts;
         };
-        const limbGeo = (pts) => new THREE.LatheGeometry(pts.map((q) => new THREE.Vector2(q.r, q.y)).reverse(), 56);
-        // Lo mismo pero con el eje arqueado (codo): la parte central se desplaza `bow` hacia el lado `dir`.
-        const bentGeo = (pts, L, bow, dir, seg = 56) => {
-          const pos = [], idx = [];
-          pts.forEach((q) => {
-            const t = q.y / (L / 2), cx = dir * bow * Math.pow(1 - t * t, 2); // pendiente nula en las puntas: se mantienen redondas y la curva se concentra en el codo
-            for (let m = 0; m <= seg; m++) { const a = (m / seg) * Math.PI * 2; pos.push(cx + q.r * Math.cos(a), q.y, q.r * Math.sin(a)); }
-          });
-          for (let k = 0; k < pts.length - 1; k++) for (let m = 0; m < seg; m++) { const a = k * (seg + 1) + m, b = a + seg + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
-          const g = new THREE.BufferGeometry();
-          g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-          g.setIndex(idx);
-          g.computeVertexNormals();
+        const limbGeo = (pts, L) => {
+          const g = new THREE.LatheGeometry(pts.map((q) => new THREE.Vector2(q.r, q.y)).reverse(), 56);
+          const pos = g.attributes.position, uv = g.attributes.uv;
+          for (let k = 0; k < pos.count; k++) uv.setY(k, (L / 2 - pos.getY(k)) / L); // la rejilla sigue el largo real de la extremidad
           return g;
         };
         const G = 0.15; // misma separación entre el torso y cada pieza
@@ -105,15 +96,12 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         const HR = 0.31, D = HR * 2;
         const TH = 2.17 * D, TR0 = 0.42 * D, TR1 = 0.56 * D; // torso: 2,17 de alto, 0,8 de ancho arriba y 1,1 abajo (medido 0,81 y 1,04)
         const AL = 1.7 * D, LL = 2.0 * D; // largo de brazos y piernas
-        // Perfil de grosor medido sobre AEROSET (diámetro en cabezas a lo largo de la extremidad, de arriba abajo).
-        // Brazo: ligero vientre (máximo ~0,40 hacia la mitad) y puntas redondeadas de ~0,25 a 0,3.
-        const ARM_ENV = [[0, 0.24], [0.1, 0.27], [0.2, 0.32], [0.3, 0.36], [0.4, 0.39], [0.5, 0.4], [0.6, 0.38], [0.7, 0.36], [0.8, 0.33], [0.9, 0.3], [1, 0.28]];
-        // Pierna: máximo (~0,58) hacia el 60 %, cadera ~0,4 y pie ~0,5.
-        const LEG_ENV = [[0, 0.4], [0.1, 0.43], [0.2, 0.46], [0.3, 0.5], [0.4, 0.54], [0.5, 0.57], [0.6, 0.58], [0.7, 0.57], [0.8, 0.55], [0.9, 0.52], [1, 0.5]];
-        const ARM_PTS = limbPts(AL, ARM_ENV.map(([x, v]) => [x, v * 1.15])), LEG_PTS = limbPts(LL, LEG_ENV);
+        // Extremidades lisas, algo más finas junto al torso y más gruesas hacia el extremo (como en AEROSET), con puntas semiesféricas.
+        const ARM_ENV = [[0, 0.3], [0.3, 0.36], [0.7, 0.4], [1, 0.42]];
+        const LEG_ENV = [[0, 0.4], [0.3, 0.47], [0.7, 0.53], [1, 0.55]];
+        const ARM_PTS = limbPts(AL, ARM_ENV), LEG_PTS = limbPts(LL, LEG_ENV);
         const ARn = 0.1; // radio del brazo cerca del hombro (para el hueco)
         const SPL = 0.22; // los brazos se abren unos 12° hacia fuera por abajo
-        const BOW = 0.07; // pose de reposo: los codos sobresalen un poco y las manos vuelven hacia el cuerpo
         const LSP = 0.07; // pose de reposo: las piernas se abren ligeramente
         const trAt = (y) => TR0 + (TR1 - TR0) * Math.pow(Math.min(1, Math.max(0, (TH / 2 - y) / TH)), 1.1);
         const sy = TH / 2 - 0.14; // los brazos salen de lo más alto del torso, junto a los hombros
@@ -122,10 +110,10 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         const defs = {
           torso: { geo: capsuleGeo(TH, TR0, TR1, 1, 0.72), scz: 0.8, shape: new C.Box(new C.Vec3(0.3, TH * 0.45, 0.2)), mass: 4, k: 1, a: [0, 0, 0], pv: [0, 0, 0], tor: [0, 0, 0], rest: [0, 0, 0] },
           head: { geo: new THREE.SphereGeometry(HR, 40, 28), scz: 1, shape: new C.Sphere(HR), mass: 0.8, k: 1.12, a: [0, TH / 2 + G + HR, 0], pv: [0, -HR, 0], tor: [0, TH / 2, 0], rest: [0, 0, 0] },
-          al: { geo: bentGeo(ARM_PTS, AL, BOW, -1), scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [-ax, ay, 0], pv: [0, AL / 2, 0], tor: [-trAt(sy), sy, 0], rest: [0, 0, -SPL] },
-          ar: { geo: bentGeo(ARM_PTS, AL, BOW, 1), scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [ax, ay, 0], pv: [0, AL / 2, 0], tor: [trAt(sy), sy, 0], rest: [0, 0, SPL] },
-          ll: { geo: limbGeo(LEG_PTS), scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [-0.25 - (LL / 2) * Math.sin(LSP), -TH / 2 - G - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [-0.2, -TH / 2 + 0.04, 0], rest: [0, 0, -LSP] },
-          lr: { geo: limbGeo(LEG_PTS), scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [0.25 + (LL / 2) * Math.sin(LSP), -TH / 2 - G - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [0.2, -TH / 2 + 0.04, 0], rest: [0, 0, LSP] },
+          al: { geo: limbGeo(ARM_PTS, AL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [-ax, ay, 0], pv: [0, AL / 2, 0], tor: [-trAt(sy), sy, 0], rest: [0, 0, -SPL] },
+          ar: { geo: limbGeo(ARM_PTS, AL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.09, AL / 2, 0.09)), mass: 0.6, k: 0.92, a: [ax, ay, 0], pv: [0, AL / 2, 0], tor: [trAt(sy), sy, 0], rest: [0, 0, SPL] },
+          ll: { geo: limbGeo(LEG_PTS, LL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [-0.25 - (LL / 2) * Math.sin(LSP), -TH / 2 - G - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [-0.2, -TH / 2 + 0.04, 0], rest: [0, 0, -LSP] },
+          lr: { geo: limbGeo(LEG_PTS, LL), grid: true, scz: 1, shape: new C.Box(new C.Vec3(0.14, LL / 2, 0.14)), mass: 1, k: 0.8, a: [0.25 + (LL / 2) * Math.sin(LSP), -TH / 2 - G - (LL / 2) * Math.cos(LSP), 0], pv: [0, LL / 2, 0], tor: [0.2, -TH / 2 + 0.04, 0], rest: [0, 0, LSP] },
         };
         const HOVER = G + LL + TH / 2 + 0.06;
         const world = new C.World({ gravity: new C.Vec3(0, -16, 0) });
@@ -135,32 +123,58 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         const ragdoll = pose === "ragdoll";
         let base;
         try { base = new THREE.Color(color); } catch { base = new THREE.Color("#E3B04B"); }
+        const rim = base.clone().lerp(new THREE.Color(0xb48be8), 0.38); // borde violeta de la cáscara
+        const gridTex = (() => {
+          const cv = document.createElement("canvas");
+          cv.width = cv.height = 256;
+          const g = cv.getContext("2d");
+          g.fillStyle = "#ffffff";
+          g.fillRect(0, 0, 256, 256);
+          g.strokeStyle = "#8a5a50";
+          g.lineWidth = 22;
+          g.lineCap = "round";
+          for (const v of [0, 128, 256]) { g.beginPath(); g.moveTo(0, v); g.lineTo(256, v); g.stroke(); g.beginPath(); g.moveTo(v, 0); g.lineTo(v, 256); g.stroke(); }
+          const tx = new THREE.CanvasTexture(cv);
+          tx.wrapS = tx.wrapT = THREE.RepeatWrapping;
+          tx.colorSpace = THREE.SRGBColorSpace;
+          tx.anisotropy = 4;
+          return tx;
+        })();
         const P = { parts: {}, springs: [] };
         for (const [n, d] of Object.entries(defs)) {
-          // acabado de pompa: translúcido, brillante y con reflejos iridiscentes
-          const mat = new THREE.MeshPhysicalMaterial({
-            color: base.clone().multiplyScalar(d.k), emissive: base.clone().multiplyScalar(0.2), transparent: true, opacity: 0.82, roughness: 0.04, metalness: 0,
-            clearcoat: 1, clearcoatRoughness: 0.03, ior: 1.45, specularIntensity: 1,
-            envMapIntensity: 1.7, side: THREE.DoubleSide, depthWrite: false,
+          // Cristal de dos capas, como en AEROSET: núcleo vivo (con rejilla en las extremidades) y cáscara translúcida con el borde violeta.
+          const grp = new THREE.Group();
+          const tex = d.grid ? gridTex.clone() : null;
+          if (tex) { tex.needsUpdate = true; tex.repeat.set(2, n[0] === "l" ? 2.6 : 3.3); } // casillas casi cuadradas, 4 alrededor de la extremidad
+          const core = new THREE.Mesh(d.geo, new THREE.MeshPhysicalMaterial({
+            color: base.clone().multiplyScalar(d.k * 0.72), map: tex, emissive: base.clone().multiplyScalar(0.03), roughness: 0.28, metalness: 0,
+            clearcoat: 0.7, clearcoatRoughness: 0.06, envMapIntensity: 0.22,
+          }));
+          core.scale.set(0.84, 0.95, 0.84 * d.scz);
+          const shellMat = new THREE.MeshPhysicalMaterial({
+            color: base.clone().lerp(new THREE.Color(0xffffff), 0.18), transparent: true, opacity: 0.4, roughness: 0.04, metalness: 0,
+            clearcoat: 1, clearcoatRoughness: 0.03, ior: 1.45, envMapIntensity: 1.8, depthWrite: false,
           });
-          // borde más intenso y centro más translúcido, como la jalea de cristal de AEROSET
-          mat.onBeforeCompile = (sh) => {
-            sh.fragmentShader = sh.fragmentShader.replace("#include <dithering_fragment>", `#include <dithering_fragment>
-              float fr = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 1.4);
-              gl_FragColor.a = mix(0.58, 0.97, fr);
-              gl_FragColor.rgb *= mix(1.04, 0.78, fr);`);
+          shellMat.onBeforeCompile = (sh) => {
+            sh.uniforms.rimCol = { value: rim };
+            sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nuniform vec3 rimCol;").replace("#include <dithering_fragment>", `#include <dithering_fragment>
+              float fr = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 1.6);
+              gl_FragColor.a = mix(0.2, 0.88, fr);
+              gl_FragColor.rgb = mix(gl_FragColor.rgb, rimCol, fr * 0.6);`);
           };
-          const mesh = new THREE.Mesh(d.geo, mat);
-          mesh.scale.z = d.scz;
-          mesh.castShadow = true;
-          mesh.renderOrder = n === "torso" ? 0 : n === "head" ? 2 : 1;
+          const shell = new THREE.Mesh(d.geo, shellMat);
+          shell.scale.z = d.scz;
+          shell.castShadow = true;
+          shell.renderOrder = 1;
+          grp.add(core, shell);
+          const mesh = grp;
           scene.add(mesh);
           const b = new C.Body({ mass: n === "torso" && !ragdoll ? 0 : d.mass, shape: d.shape, collisionFilterGroup: 2, collisionFilterMask: 1, linearDamping: 0.12, angularDamping: 0.5 });
           if (n === "torso" && !ragdoll) b.type = C.Body.KINEMATIC;
           world.addBody(b);
           const qt = new C.Quaternion();
           qt.setFromEuler(d.rest[0], d.rest[1], d.rest[2]);
-          P.parts[n] = { b, mesh, d, qt };
+          P.parts[n] = { b, mesh, d, qt, mats: [core.material, shellMat] };
         }
         const T = P.parts.torso.b;
         for (const n of ["head", "al", "ar", "ll", "lr"]) {
@@ -227,7 +241,8 @@ export default function Puppet3D({ color = "#E3B04B", pose = "idle", className =
         raf = requestAnimationFrame(step);
         cleanup = () => {
           cancelAnimationFrame(raf);
-          Object.values(P.parts).forEach((q) => { q.mesh.geometry.dispose(); q.mesh.material.dispose(); });
+          Object.values(P.parts).forEach((q) => { q.d.geo.dispose(); q.mats.forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); }); });
+          gridTex.dispose();
           envTex.dispose();
           pmrem.dispose();
           renderer.dispose();
