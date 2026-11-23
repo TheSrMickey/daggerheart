@@ -58,12 +58,15 @@ const SCENES = {
   muelles: "Los barcos llegan de ninguna parte y atracan envueltos en niebla. Un cargamento sin dueño espera a que alguien lo reclame.",
   catacumbas: "Una reja antigua, sellada con el símbolo del faro. Del otro lado llega un frío que no pertenece a este mundo.",
 };
-// La hora de la ciudad es la misma para todos: cada franja dura dos horas reales.
+// La hora de la ciudad es la hora de España (Madrid): amanecer 06:00–12:00, tarde 12:00–20:00 y noche 20:00–06:00.
 // Las Catacumbas se abren cuando el Misterio de la ciudad llega a este nivel.
 const CAT_AT = 60;
 const syncCat = (city) => { const d = DISTRICTS.find((x) => x.id === "catacumbas"); d.locked = !(city.pulse.Misterio >= CAT_AT); d.desc = d.locked ? "Cerradas bajo el faro. Se abrirán cuando el Misterio de la ciudad llegue a " + CAT_AT + " (ahora " + city.pulse.Misterio + ")." : "La reja del faro se ha abierto. Del otro lado sube un frío que no pertenece a este mundo."; };
 const FRANJAS = [["Amanecer", Sunrise], ["Tarde", Sparkles], ["Noche", Clock]];
-const franjaNow = () => Math.floor(Date.now() / 7200000) % 3;
+const spainHour = (t) => Number(new Intl.DateTimeFormat("es-ES", { hour: "numeric", hourCycle: "h23", timeZone: "Europe/Madrid" }).format(t || Date.now())) % 24;
+const franjaNow = () => { const h = spainHour(); return h >= 6 && h < 12 ? 0 : h < 20 && h >= 12 ? 1 : 2; };
+const spainClock = (t) => new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Madrid" }).format(t);
+const FR_HRS = ["06:00–12:00", "12:00–20:00", "20:00–06:00"];
 // Fase 3: explorar un distrito
 const POIS = {
   faro: [
@@ -465,7 +468,7 @@ function PromptsDlg({ onClose }) {
         <div className="adv-tabs">{DISTRICTS.map((d) => <button key={d.id} type="button" className={z === d.id ? "is-on" : ""} onClick={() => setZ(d.id)}>{d.name.split(" ")[0] === "La" ? "Linterna" : d.name.split(" ")[0]}</button>)}</div>
         {FR_KEY.map((f, i) => { const k = z + "-" + f; const t = promptOf(z, f); return (
           <div key={f} className="fs-pr">
-            <div className="fs-prh"><b>{FRANJAS[i][0]}</b><code>{k}</code><i className={ok[k] ? "is-ok" : ""}>{ok[k] ? "Subida" : "Falta"}</i><button type="button" className="mh-btn" onClick={() => copy(k, t)}>{copied === k ? "Copiado" : "Copiar prompt"}</button></div>
+            <div className="fs-prh"><b>{FRANJAS[i][0]} <small className="fs-cnt">{FR_HRS[i]} (hora de España)</small></b><code>{k}</code><i className={ok[k] ? "is-ok" : ""}>{ok[k] ? "Subida" : "Falta"}</i><button type="button" className="mh-btn" onClick={() => copy(k, t)}>{copied === k ? "Copiado" : "Copiar prompt"}</button></div>
             <div className="fs-up">{prev[k] && <img src={prev[k]} alt="" />}<label className="mh-btn">{busy === k ? "Subiendo…" : prev[k] ? "Cambiar imagen" : "Subir imagen"}<input type="file" accept="image/*" hidden disabled={!!busy} onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; if (f) up(k, f); }} /></label>{ok[k] && <button type="button" className="fs-link" onClick={() => del(k)}>Quitar</button>}</div>
             <textarea className="mh-input" readOnly rows={5} value={t} onFocus={(e) => e.target.select()} />
           </div>); })}
@@ -476,20 +479,21 @@ function PromptsDlg({ onClose }) {
 }
 function ResultDlg({ res, onClose }) {
   const [roll, setRoll] = useState(true);
-  useEffect(() => { const t = setTimeout(() => setRoll(false), 1100); return () => clearTimeout(t); }, []);
+  const [tmp, setTmp] = useState([7, 7]);
+  useEffect(() => { const i = setInterval(() => setTmp([1 + Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 12)]), 70); const t = setTimeout(() => { setRoll(false); clearInterval(i); }, 1300); return () => { clearTimeout(t); clearInterval(i); }; }, []);
   const { r, fx, name } = res;
   const [kn, kc] = KIND[r.kind];
   return (
     <div className="adv-dov" onClick={() => !roll && onClose()}>
-      <div className="adv-dlg" role="dialog" aria-label="Resultado" onClick={(e) => e.stopPropagation()}>
+      <div className={"adv-dlg" + (!roll && r.kind === "fal" ? " is-fail" : "")} role="dialog" aria-label="Resultado" onClick={(e) => e.stopPropagation()}>{!roll && <Burst kind={r.crit ? "esp" : r.kind} />}
         <span className="adv-pk">Resultado</span><h3 className="mh-serif">{name}</h3>
         <div className={"fs-dice" + (roll ? " is-roll" : "")}>
-          <div className="fs-die is-h"><small>Esperanza</small><b>{roll ? "?" : r.h}</b></div>
-          <div className="fs-die is-f"><small>Miedo</small><b>{roll ? "?" : r.f}</b></div>
+          <div className="fs-die is-h"><small>Esperanza</small><b>{roll ? tmp[0] : r.h}</b></div>
+          <div className="fs-die is-f"><small>Miedo</small><b>{roll ? tmp[1] : r.f}</b></div>
           <div className="fs-sum">{roll ? "…" : <><span>{r.h} + {r.f} {r.mod >= 0 ? "+" : "−"} {Math.abs(r.mod)} = <b>{r.total}</b></span><small>contra dificultad {r.df}</small></>}</div>
         </div>
         {!roll && (<>
-          <div className="adv-ch" style={{ borderColor: kc, color: kc }}><b>{r.crit ? "¡Crítico! " : ""}{kn}</b></div>
+          <div className={"adv-ch fs-pop" + (r.crit ? " is-crit" : "")} style={{ borderColor: kc, color: kc }}><b>{r.crit ? "¡Crítico! " : ""}{kn}</b></div>
           <p className="adv-dt is-out">{fx.text}</p>
           <div className="adv-fx">{chipsFx(fx).map(([f, c]) => <i key={f} style={{ "--fc": c }}>{f}</i>)}{!chipsFx(fx).length && <i style={{ "--fc": "#9a93ad" }}>Sin recompensa</i>}</div>
           <PulseBars pulse={res.city.pulse} />
@@ -517,6 +521,21 @@ function EncDlg({ me, onPick, onClose, onMe }) {
     </div>
   );
 }
+// Partículas de ambiente por zona (luciérnagas, brasas, niebla…): solo decoración.
+const MOTE = { faro: "#FFE08A", jardines: "#9BE8A0", mercado: "#F2B26B", gremios: "#FF9A4D", linterna: "#FFB35C", muelles: "#B9E3F0", catacumbas: "#C9B3FF" };
+function Ambient({ id, fr }) {
+  const n = fr === 2 ? 18 : 9;
+  return (
+    <div className="fs-amb" aria-hidden="true">
+      <i className="fs-fog is-a" /><i className="fs-fog is-b" />
+      {Array.from({ length: n }, (_, i) => <i key={id + i} className="fs-mote" style={{ left: ((i * 53 + 11) % 96) + "%", bottom: -(i % 4) * 4 + "%", "--mc": MOTE[id] || "#fff", "--dur": 7 + (i % 6) * 1.7 + "s", "--del": -((i * 1.3) % 9) + "s", "--dx": ((i % 5) - 2) * 14 + "px", width: 3 + (i % 3) + "px", height: 3 + (i % 3) + "px" }} />)}
+    </div>
+  );
+}
+function Burst({ kind }) {
+  const col = kind === "esp" ? "#E8C547" : kind === "mie" ? "#A58BE8" : "#D9644E";
+  return <div className={"fs-burst k-" + kind} aria-hidden="true">{Array.from({ length: kind === "fal" ? 0 : 16 }, (_, i) => <i key={i} style={{ "--a": (i * 360) / 16 + "deg", "--d": 60 + (i % 3) * 26 + "px", "--bc": col }} />)}</div>;
+}
 function Brumaria({ me, crowd, city, onDecided, onMe }) {
   const [fr, setFr] = useState(franjaNow());
   const [now, setNow] = useState(Date.now());
@@ -528,6 +547,7 @@ function Brumaria({ me, crowd, city, onDecided, onMe }) {
   const [res, setRes] = useState(null);
   const [toast, setToast] = useState("");
   const [walking, setWalking] = useState(false);
+  const [trav, setTrav] = useState("");
   useEffect(() => { const t = setInterval(() => { setFr(franjaNow()); setNow(Date.now()); }, 1000); return () => clearInterval(t); }, []);
   const at = me.loc || "faro";
   const d = DISTRICTS.find((x) => x.id === at);
@@ -543,7 +563,7 @@ function Brumaria({ me, crowd, city, onDecided, onMe }) {
     if (dd.locked) return note("Las Catacumbas se abren cuando el Misterio de la ciudad llegue a " + CAT_AT + " (ahora " + city.pulse.Misterio + ").");
     setWalking(true);
     const t = await moveTraveller(id).catch(() => null);
-    if (t) onMe(t);
+    if (t) { onMe(t); setTrav(dd.name); setTimeout(() => setTrav(""), 1500); }
     setWalking(false); setPoi(null); setTab("acc");
   };
   const begin = async (def, kind) => {
@@ -569,12 +589,12 @@ function Brumaria({ me, crowd, city, onDecided, onMe }) {
   const sgn = (n) => (n >= 0 ? "+" : "−") + Math.abs(n);
   return (
     <div className="fs" style={{ "--dc": d.c }}>
-      <ZoneBg id={at} fr={fr} /><div className="fs-sh" />
+      <ZoneBg id={at} fr={fr} /><div className="fs-sh" /><Ambient id={at} fr={fr} />
       <div className="fs-top">
-        <span className="fs-g"><FIcon size={14} /> {FName}</span>
+        <span className="fs-g"><FIcon size={14} /> {FName} · {spainClock(now)}</span>
         <span className="fs-g"><MapPin size={14} /> <b>{d.name}</b></span>
-        <button type="button" className="fs-g fs-b is-m" onClick={() => setModal("city")} aria-label="Pulso de la ciudad"><Flame size={14} /> {Object.keys(PULSE_COL).map((k) => <i key={k} style={{ "--pc": PULSE_COL[k] }}>{city.pulse[k]}</i>)}</button>
-        <span className="fs-g is-r"><Coins size={14} /> {me.gold} · <Backpack size={14} /> {me.items.length}</span>
+        <button type="button" className="fs-g fs-b is-m" onClick={() => setModal("city")} aria-label="Pulso de la ciudad"><Flame size={14} /> {Object.keys(PULSE_COL).map((k) => <i key={k + city.pulse[k]} className="fs-bump" style={{ "--pc": PULSE_COL[k] }}>{city.pulse[k]}</i>)}</button>
+        <span className="fs-g is-r"><Coins size={14} /> <b key={me.gold} className="fs-bump">{me.gold}</b> · <Backpack size={14} /> <b key={me.items.length} className="fs-bump">{me.items.length}</b></span>
         <button type="button" className="fs-g fs-b" onClick={() => setModal("jr")}><BookOpen size={14} /> Diario</button>
         <button type="button" className="fs-g fs-b" onClick={() => setModal("chat")}><MessageCircle size={14} /> Charla</button>
         <button type="button" className="fs-g fs-b" onClick={() => setModal("city")}><Users size={14} /> {crowd.length}</button>
@@ -611,6 +631,7 @@ function Brumaria({ me, crowd, city, onDecided, onMe }) {
         </div>
       </aside>
       <nav className="fs-menu" aria-label="Zonas">{DISTRICTS.map((x) => <button key={x.id} type="button" className={(at === x.id ? "is-on " : "") + (x.locked || (act && left > 0 && at !== x.id) ? "is-lock" : "")} style={{ "--dc": x.c }} onClick={() => go(x.id)} disabled={walking}><i>{x.locked ? <Lock size={14} /> : <span>{x.name.charAt(0)}</span>}</i><b>{x.name}</b><small>{x.locked ? "Misterio " + CAT_AT : crowd.filter((t) => (t.loc || "faro") === x.id).length + " aquí"}</small></button>)}</nav>
+      {trav && <div className="fs-trav" key={trav}><small>Llegas a</small><b className="mh-serif">{trav}</b></div>}
       {toast && <div className="fs-toast">{toast}</div>}
       {modal === "enc" && <EncDlg me={me} onPick={(e) => begin(e, "enc")} onClose={() => setModal(null)} onMe={onMe} />}
       {modal === "jr" && <Journal me={me} onClose={() => setModal(null)} />}
@@ -842,6 +863,42 @@ const CSS = `
 .fs-dice { display: flex; align-items: center; gap: 12px; margin: 14px 0; flex-wrap: wrap; } .fs-die { width: 84px; padding: 10px 0; border-radius: 16px; text-align: center; border: 2px solid; } .fs-die small { display: block; font-size: 11px; font-weight: 700; } .fs-die b { font-size: 36px; } .fs-die.is-h { color: #E8C547; border-color: #E8C547; background: color-mix(in srgb, #E8C547 14%, transparent); } .fs-die.is-f { color: #A58BE8; border-color: #A58BE8; background: color-mix(in srgb, #A58BE8 14%, transparent); } .fs-dice.is-roll .fs-die { animation: advShake .25s infinite; } @keyframes advShake { 0% { transform: rotate(-6deg) translateY(0); } 50% { transform: rotate(6deg) translateY(-6px); } 100% { transform: rotate(-6deg) translateY(0); } } .fs-sum { display: flex; flex-direction: column; font-size: 15px; } .fs-sum small { color: var(--mh-muted); }
 .fs-pr { margin-bottom: 12px; } .fs-prh { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; } .fs-prh code { font-size: 12px; color: var(--mh-muted); } .fs-prh i { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, #D9644E 22%, transparent); color: #D9644E; } .fs-prh i.is-ok { background: color-mix(in srgb, #6FBF73 22%, transparent); color: #6FBF73; } .fs-prh .mh-btn { margin-left: auto; } .fs-many { display: inline-block; margin: 0 0 10px; cursor: pointer; } .fs-up { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; } .fs-up img { width: 96px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--mh-line); } .fs-up label { cursor: pointer; } .fs-up .fs-link { color: var(--mh-muted); }
 .fs-pr textarea { width: 100%; font-size: 12px; resize: none; } .fs-cnt { font-size: 13px; color: var(--mh-muted); font-family: var(--font-body), 'Inter', system-ui, sans-serif; margin-left: 8px; }
+/* animaciones */
+.fs-amb { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.fs-fog { position: absolute; left: -30%; width: 160%; height: 38%; background: radial-gradient(closest-side, rgba(216,210,245,.22), transparent); filter: blur(18px); animation: advFog 38s linear infinite; } .fs-fog.is-a { bottom: 12%; } .fs-fog.is-b { bottom: 30%; height: 28%; opacity: .7; animation-duration: 56s; animation-direction: reverse; }
+@keyframes advFog { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
+.fs-mote { position: absolute; border-radius: 50%; background: var(--mc); box-shadow: 0 0 10px 2px var(--mc); opacity: 0; animation: advMote var(--dur) ease-in-out var(--del) infinite; }
+@keyframes advMote { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: .9; } 70% { opacity: .7; } 100% { transform: translate(var(--dx), -62vh); opacity: 0; } }
+.fs-trav { position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: radial-gradient(closest-side, rgba(8,6,24,.78), rgba(8,6,24,.35)); color: #f1edf8; pointer-events: none; animation: advTrav 1.5s ease both; } .fs-trav b { font-size: clamp(30px, 5vw, 54px); font-weight: 500; text-shadow: 0 4px 24px #000a; } .fs-trav small { letter-spacing: .2em; text-transform: uppercase; font-size: 11.5px; color: rgba(241,237,248,.75); }
+@keyframes advTrav { 0% { opacity: 0; } 22% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+.fs-bump { display: inline-block; animation: advBump .55s cubic-bezier(.3,1.6,.5,1); } @keyframes advBump { 0% { transform: scale(1.6); } 100% { transform: none; } }
+.fs-bar em { position: relative; overflow: hidden; } .fs-bar em::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: advShine 1.8s linear infinite; } @keyframes advShine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.fs-claim { animation: advGlow 1.6s ease-in-out infinite; } @keyframes advGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(227,176,75,.7); } 50% { box-shadow: 0 0 0 9px rgba(227,176,75,0); } }
+.fs-pn { animation: advSlide .45s cubic-bezier(.2,.8,.2,1) both; } @keyframes advSlide { from { opacity: 0; transform: translateX(-22px); } to { opacity: 1; transform: none; } }
+.fs-menu { animation: advUp .45s cubic-bezier(.2,.8,.2,1) both; } @keyframes advUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+.fs-menu button { transition: transform .15s, background .2s; } .fs-menu button:hover:not(:disabled) { transform: translateY(-3px); } .fs-menu button.is-on i { animation: advPulse 2.2s infinite; box-shadow: 0 0 0 0 var(--dc); }
+.fs-pb > * { animation: advRise .35s both; } .fs-pb > *:nth-child(2) { animation-delay: .05s; } .fs-pb > *:nth-child(3) { animation-delay: .1s; } .fs-pb > *:nth-child(4) { animation-delay: .15s; } .fs-pb > *:nth-child(5) { animation-delay: .2s; } @keyframes advRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.fs-act:hover:not(:disabled), .fs-enc-b:hover:not(:disabled) { transform: translateX(3px); transition: transform .15s; }
+.adv-dlg { animation: advPop .28s cubic-bezier(.2,1.2,.4,1) both; position: relative; } @keyframes advPop { from { opacity: 0; transform: scale(.92) translateY(10px); } to { opacity: 1; transform: none; } }
+.adv-dlg.is-fail { animation: advPop .28s both, advFail .5s .3s; } @keyframes advFail { 0%, 100% { transform: none; } 20% { transform: translateX(-9px); } 40% { transform: translateX(9px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+.fs-die { transition: transform .2s; } .fs-dice:not(.is-roll) .fs-die { animation: advLand .5s cubic-bezier(.3,1.6,.5,1); } @keyframes advLand { from { transform: scale(1.35) rotate(12deg); } to { transform: none; } }
+.fs-pop { animation: advPop2 .55s cubic-bezier(.3,1.6,.5,1) both; } @keyframes advPop2 { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } } .fs-pop.is-crit { text-shadow: 0 0 14px currentColor; }
+.fs-burst { position: absolute; left: 50%; top: 110px; width: 0; height: 0; pointer-events: none; } .fs-burst i { position: absolute; width: 7px; height: 7px; margin: -3px; border-radius: 50%; background: var(--bc); box-shadow: 0 0 8px var(--bc); animation: advSpark 1s ease-out both; } @keyframes advSpark { from { transform: rotate(var(--a)) translateX(0); opacity: 1; } to { transform: rotate(var(--a)) translateX(var(--d)); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fs-pn, .fs-menu, .fs-pb > *, .adv-dlg, .fs-pop, .fs-trav { animation: none !important; } .fs-trav { display: none; } }
+/* modo claro */
+html[data-mh-theme="light"] .adv i[style*="--fc"], html[data-mh-theme="light"] .fs-prh i { color: color-mix(in srgb, var(--fc, #D9644E) 52%, #1f1a2e); }
+html[data-mh-theme="light"] .adv-ch { filter: brightness(.68) saturate(1.25); }
+html[data-mh-theme="light"] .fs-die.is-h { color: #7a5a00; border-color: #c99a1a; } html[data-mh-theme="light"] .fs-die.is-f { color: #5b3fb0; border-color: #8a6ae0; }
+html[data-mh-theme="light"] .adv-pk { color: #4a3a12; }
+html[data-mh-theme="light"] .fs-sh { background: linear-gradient(180deg, rgba(255,251,240,.4), transparent 22%, transparent 58%, rgba(255,251,240,.55)); }
+html[data-mh-theme="light"] .fs-g, html[data-mh-theme="light"] .fs-pn, html[data-mh-theme="light"] .fs-menu, html[data-mh-theme="light"] .fs-toast { background: rgba(255,251,240,.84); color: #2b2438; border-color: rgba(43,36,56,.16); box-shadow: 0 6px 24px -10px rgba(43,36,56,.4); }
+html[data-mh-theme="light"] .fs-run small, html[data-mh-theme="light"] .fs-act small, html[data-mh-theme="light"] .fs-menu small, html[data-mh-theme="light"] .fs-link { color: rgba(43,36,56,.68); }
+html[data-mh-theme="light"] .fs-act, html[data-mh-theme="light"] .fs-poi button, html[data-mh-theme="light"] .fs-pt, html[data-mh-theme="light"] .fs-menu button { background: rgba(43,36,56,.06); border-color: rgba(43,36,56,.14); color: #2b2438; }
+html[data-mh-theme="light"] .fs-pt p { color: #3d3550; } html[data-mh-theme="light"] .fs-pt em { color: #8a5a00; }
+html[data-mh-theme="light"] .fs-pn .adv-tabs button { color: #3d3550; border-color: rgba(43,36,56,.2); } html[data-mh-theme="light"] .fs-pn .adv-tabs button.is-on { color: #1a1408; border-color: transparent; }
+html[data-mh-theme="light"] .fs-poi button.is-on, html[data-mh-theme="light"] .fs-menu button.is-on { background: color-mix(in srgb, var(--dc) 38%, #fffbf0); border-color: var(--dc); color: #1f1a2e; }
+html[data-mh-theme="light"] .fs-run { background: color-mix(in srgb, var(--dc) 20%, #fffbf0); } html[data-mh-theme="light"] .fs-bar { background: rgba(43,36,56,.15); }
+html[data-mh-theme="light"] .fs-g.is-m i { color: color-mix(in srgb, var(--pc) 55%, #1f1a2e); }
 @media (max-width: 900px) { .adv-g { overflow-y: auto; } }
 @media (max-width: 720px) { .fs-pn { width: auto; right: 14px; top: auto; height: 46%; bottom: 92px; } .fs-enc { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .adv-g { grid-template-columns: 1fr; } .adv-sheet { position: static; } .adv-hi { padding: 22px 20px; } .adv-hero { min-height: 300px; } }
